@@ -4,7 +4,7 @@ A modern food ordering / restaurant website built using React and Vite.
 
 ## 🌐 Live Website
 
-http://localhost:8080/
+https://rail-bits-bharat.vercel.app/
 
 ---
 
