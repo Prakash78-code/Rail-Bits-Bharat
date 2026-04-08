@@ -1,8 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { Train, User, ChefHat, Shield, Home } from "lucide-react";
+import { Train, User, ChefHat, Shield, Home, Menu, ShoppingCart } from "lucide-react";
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
+  { to: "/menu", label: "Menu", icon: Menu },           // 🔥 NEW
+  { to: "/cart", label: "Cart", icon: ShoppingCart },   // 🔥 NEW
   { to: "/passenger", label: "Passenger", icon: User },
   { to: "/vendor", label: "Vendor", icon: ChefHat },
   { to: "/admin", label: "Admin", icon: Shield },
@@ -14,10 +16,14 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 glass border-b border-border">
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
+        
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
           <Train className="h-6 w-6 text-accent" />
           <span>Rail<span className="text-gradient">Bite</span> Bharat</span>
         </Link>
+
+        {/* Nav Links */}
         <div className="flex items-center gap-1">
           {navItems.map(({ to, label, icon: Icon }) => (
             <Link
@@ -34,6 +40,7 @@ export function Navbar() {
             </Link>
           ))}
         </div>
+
       </div>
     </nav>
   );
