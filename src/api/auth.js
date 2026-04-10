@@ -1,6 +1,6 @@
 // SIGNUP
 export const signupUser = async (email, password) => {
-  const res = await fetch("http://localhost:5000/api/auth/signup", {
+  const res = await fetch("https://rail-bits-bharat-1.onrender.com/api/signup", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -13,7 +13,7 @@ export const signupUser = async (email, password) => {
 
 // LOGIN
 export const loginUser = async (email, password) => {
-  const res = await fetch("http://localhost:5000/api/auth/login", {
+  const res = await fetch("https://rail-bits-bharat-1.onrender.com/api/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
