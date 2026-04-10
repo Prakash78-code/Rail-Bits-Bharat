@@ -12,11 +12,15 @@ import VendorDashboard from "./pages/VendorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
-// 🔥 NEW IMPORT
+// 🔥 Existing Pages
 import MenuPage from "./pages/MenuPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSummary from "./pages/OrderSummary";
+
+// 🔥 NEW PAGES (ADD THIS)
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 
@@ -31,17 +35,23 @@ const App = () => (
           <Navbar />
 
           <Routes>
+            {/* ✅ Public Routes */}
             <Route path="/" element={<Homepage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            {/* ✅ Main Features */}
             <Route path="/passenger" element={<PassengerPortal />} />
             <Route path="/vendor" element={<VendorDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
 
-            {/* 🔥 NEW ROUTE */}
+            {/* 🔥 Food App Flow */}
             <Route path="/menu" element={<MenuPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-summary" element={<OrderSummary />} />
 
+            {/* ❌ 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
