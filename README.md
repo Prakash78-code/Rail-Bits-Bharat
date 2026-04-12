@@ -1,44 +1,95 @@
-# Rail Bite Bharaat 🍽️
+# 🚆 RailBite Bharat 🍽️
 
-A modern food ordering / restaurant website built using React and Vite.
+RailBite Bharat is a smart digital platform designed to modernize railway food ordering.  
+Passengers can order food directly in trains using **PNR, seat number, and station selection**.
+
+---
 
 ## 🌐 Live Website
 
-Vercel: https://rail-bits-bharat.vercel.app/
-
-Netlify: https://rail-bits-bharat.netlify.app/
-
----
-
-## 🚀 Project Overview
-
-This project is a fast and responsive web application designed with modern frontend technologies. It provides a clean UI and smooth user experience.
+ Vercel: https://rail-bits-bharat.vercel.app/  
+ Netlify: https://rail-bits-bharat.netlify.app/
 
 ---
 
-## 🛠️ Technologies Used
+##  Project Overview
 
-- Vite  
-- React  
-- TypeScript  
-- Tailwind CSS  
-- shadcn-ui  
+RailBite Bharat is a **fast, responsive, and user-friendly web application** built using modern frontend technologies.
+
+It solves real-world problems in railway food delivery by enabling:
+- 📦 Easy ordering inside trains  
+- 🚆 PNR-based food delivery  
+- 🪑 Seat-based delivery system  
 
 ---
 
-## 💻 How to Run Locally
+## 🌟 Features
 
-Make sure Node.js and npm are installed.
+### 👤 User Features
+- 🔐 Login / Signup (Firebase Auth)
+- 🔢 PIN-based quick login
+- 🍱 Browse food menu
+- 🛒 Add to cart
+- 🚆 Order using PNR, seat & station
+- 📦 Order summary page
 
-```sh
-# Clone the repository
-git clone <YOUR_GITHUB_REPO_URL>
+### 🎨 UI/UX Features
+- ⚡ Fully responsive (mobile + desktop)
+- 🌙 Dark mode support
+- 🔔 Toast notifications
+- ⏳ Loading spinners
+- ✨ Smooth animations
 
-# Go to project folder
-cd <YOUR_PROJECT_NAME>
+### 🛠️ System Features
+- 📊 Admin dashboard
+- 📈 Revenue tracking
+- ⚠️ Complaint monitoring
+- 🏪 Vendor system
 
-# Install dependencies
-npm install
+---
 
-# Start development server
-npm run dev
+## 🖼️ Screenshot
+
+> Add screenshot in `/screenshot` folder
+
+### 🏠 Homepage
+![Homepage](./screenshot/home.png)
+
+### 🔐 Login Page
+![Login](./screenshot/login.png)
+
+### 🍱 Menu Page
+![Menu](./screenshot/menu.png)
+
+### 🚆 Checkout Page
+![Checkout](./screenshot/checkout.png)
+
+---
+
+## 🧑‍💻 Tech Stack
+
+### Frontend
+- ⚛️ React + Vite
+- 🟦 TypeScript
+- 🎨 Tailwind CSS
+- 🧩 shadcn/ui
+- 🔄 React Router
+
+### Backend (Optional)
+- 🟢 Node.js + Express
+
+### Authentication
+- 🔥 Firebase Auth
+
+### Deployment
+- ▲ Vercel
+- 🌍 Netlify
+
+---
+
+## ⚙️ Installation & Setup
+
+### 1️⃣ Clone the repository
+```bash
+git clone <https://github.com/Prakash78-code/Rail-Bits-Bharat>
+cd <cd Rail-Bits-Bharat>

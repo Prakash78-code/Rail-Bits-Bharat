@@ -2,80 +2,104 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
+import Loader from "../components/Loader";
+import { toast } from "sonner";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSignup = async () => {
+    if (!email || !password || !pin) {
+      toast.error("All fields required ❌");
+      return;
+    }
+
+    if (pin.length !== 4) {
+      toast.error("PIN must be 4 digits ❌");
+      return;
+    }
+
     try {
+      setLoading(true);
+
       // 🔐 Firebase signup
       await createUserWithEmailAndPassword(auth, email, password);
 
-      // 🔢 PIN validation
-      if (pin.length !== 4) {
-        alert("PIN must be 4 digits ❌");
-        return;
-      }
-
-      // ✅ Save PIN locally
+      // 🔢 Save PIN
       localStorage.setItem("userPIN", pin);
 
-      alert("Signup Success ✅");
+      toast.success("Signup Success ✅");
+
       navigate("/login");
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-2xl font-bold mb-4">Signup</h1>
+    <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
 
-      {/* Email */}
-      <input
-        type="email"
-        placeholder="Email"
-        className="border p-2 mb-2 w-64"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 w-full max-w-md transition-all">
 
-      {/* Password */}
-      <input
-        type="password"
-        placeholder="Password (min 6 chars)"
-        className="border p-2 mb-2 w-64"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <h1 className="text-2xl font-bold mb-4 text-center text-black dark:text-white">
+          Signup
+        </h1>
 
-      {/* PIN */}
-      <input
-        type="password"
-        placeholder="Set 4-digit PIN"
-        className="border p-2 mb-2 w-64"
-        value={pin}
-        onChange={(e) => setPin(e.target.value)}
-      />
+        {/* Email */}
+        <input
+          type="email"
+          placeholder="Email"
+          className="border p-2 mb-2 w-full rounded"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-      {/* Signup Button */}
-      <button
-        onClick={handleSignup}
-        className="bg-green-500 text-white px-4 py-2 rounded w-64"
-      >
-        Signup
-      </button>
+        {/* Password */}
+        <input
+          type="password"
+          placeholder="Password (min 6 chars)"
+          className="border p-2 mb-2 w-full rounded"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      {/* Login Link */}
-      <p className="mt-4">
-        Already have account?{" "}
-        <Link to="/login" className="text-blue-500">
-          Login
-        </Link>
-      </p>
+        {/* PIN */}
+        <input
+          type="password"
+          placeholder="Set 4-digit PIN"
+          className="border p-2 mb-2 w-full rounded"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+        />
+
+        {/* Button / Loader */}
+        {loading ? (
+          <Loader />
+        ) : (
+          <button
+            onClick={handleSignup}
+            className="bg-green-500 hover:bg-green-600 transition-all text-white px-4 py-2 rounded w-full"
+          >
+            Signup
+          </button>
+        )}
+
+        {/* Login */}
+        <p className="mt-4 text-center text-black dark:text-white">
+          Already have account?{" "}
+          <Link to="/login" className="text-blue-500">
+            Login
+          </Link>
+        </p>
+
+      </div>
     </div>
   );
 };
