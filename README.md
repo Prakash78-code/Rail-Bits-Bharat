@@ -64,6 +64,9 @@ It solves real-world problems in railway food delivery by enabling:
 ### 🚆 Checkout Page
 ![Checkout](./screenshot/checkout.png)
 
+### 🚆  Order Details
+![OrderDetails](./screenshot/orderdetails.png)
+
 ---
 
 ## 🧑‍💻 Tech Stack
@@ -91,5 +94,5 @@ It solves real-world problems in railway food delivery by enabling:
 
 ### 1️⃣ Clone the repository
 ```bash
-git clone <https://github.com/Prakash78-code/Rail-Bits-Bharat>
-cd <cd Rail-Bits-Bharat>
+git clone https://github.com/Prakash78-code/Rail-Bits-Bharat
+cd cd Rail-Bits-Bharat
