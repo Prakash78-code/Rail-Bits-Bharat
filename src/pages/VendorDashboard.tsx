@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useApp } from "@/store/AppContext";
+import { FssaiBadge } from "@/components/FssaiBadge";
+import { HygieneScore } from "@/components/HygieneScore";
 import { StarRating } from "@/components/StarRating";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { ChefHat, AlertTriangle, Package, Clock, IndianRupee, LogIn } from "lucide-react";
@@ -88,6 +90,14 @@ export default function VendorDashboard() {
               <h1 className="font-display text-2xl font-bold">{vendor.name}</h1>
               <p className="text-sm text-muted-foreground">{vendor.station}</p>
               <StarRating rating={vendor.hygieneRating} />
+              <div className="mt-3 space-y-2">
+               <FssaiBadge
+                fssaiNumber={vendor.fssaiNumber}
+                verified={vendor.fssaiVerified}
+                />
+               <HygieneScore score={vendor.hygieneScore} />
+              </div>
+              
             </div>
             <button onClick={() => setLoggedIn(false)} className="text-sm text-muted-foreground hover:text-foreground">Logout</button>
           </div>

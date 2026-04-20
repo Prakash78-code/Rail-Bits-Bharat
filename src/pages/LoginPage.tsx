@@ -5,7 +5,6 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "../firebase";
-import Loader from "../components/Loader";
 import { toast } from "sonner";
 
 const LoginPage = () => {
@@ -28,8 +27,8 @@ const LoginPage = () => {
       await signInWithEmailAndPassword(auth, email, password);
       toast.success("Login Success ✅");
       navigate("/menu");
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error("Invalid credentials ❌");
     } finally {
       setLoading(false);
     }
@@ -40,7 +39,7 @@ const LoginPage = () => {
     const savedPin = localStorage.getItem("userPIN");
 
     if (!savedPin) {
-      toast.error("No PIN found, signup first ❌");
+      toast.error("No PIN found ❌");
       return;
     }
 
@@ -55,37 +54,35 @@ const LoginPage = () => {
   // 🔁 Forgot Password
   const handleForgotPassword = async () => {
     if (!email) {
-      toast.error("Enter your email first ❌");
+      toast.error("Enter email first ❌");
       return;
     }
 
     try {
       await sendPasswordResetEmail(auth, email);
-      toast.success("Password reset link sent 📩");
-    } catch (err: any) {
-      toast.error(err.message);
+      toast.success("Reset link sent 📩");
+    } catch (err) {
+      toast.error("Error sending email ❌");
     }
   };
 
-  // 🔄 Reset PIN
-  const handleResetPin = () => {
-    localStorage.removeItem("userPIN");
-    toast.success("PIN reset, signup again 🔄");
-  };
-
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-md w-full max-w-md p-8">
 
-        <h1 className="text-2xl font-bold mb-4 text-center text-black dark:text-white">
-          Login
+        {/* Title */}
+        <h1 className="text-2xl font-semibold text-center mb-2">
+          Welcome Back 🚆
         </h1>
+        <p className="text-sm text-gray-500 text-center mb-6">
+          Login to your account
+        </p>
 
         {/* Email */}
         <input
           type="email"
           placeholder="Email"
-          className="border p-2 mb-2 w-full rounded"
+          className="w-full px-4 py-2 border rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 outline-none"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -94,7 +91,7 @@ const LoginPage = () => {
         <input
           type="password"
           placeholder="Password"
-          className="border p-2 mb-1 w-full rounded"
+          className="w-full px-4 py-2 border rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 outline-none"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -102,56 +99,47 @@ const LoginPage = () => {
         {/* Forgot Password */}
         <button
           onClick={handleForgotPassword}
-          className="text-sm text-blue-500 mb-2"
+          className="text-sm text-blue-600 mb-4"
         >
           Forgot Password?
         </button>
 
         {/* Login Button */}
-        {loading ? (
-          <Loader />
-        ) : (
-          <button
-            onClick={handleLogin}
-            className="bg-blue-500 hover:bg-blue-600 transition-all text-white px-4 py-2 rounded w-full"
-          >
-            Login with Email
-          </button>
-        )}
+        <button
+          onClick={handleLogin}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
 
         {/* Divider */}
-        <p className="my-4 text-center text-gray-500">OR</p>
+        <div className="flex items-center my-6">
+          <div className="flex-1 h-px bg-gray-300"></div>
+          <span className="px-3 text-sm text-gray-500">or</span>
+          <div className="flex-1 h-px bg-gray-300"></div>
+        </div>
 
-        {/* PIN */}
+        {/* PIN Login */}
         <input
           type="password"
           placeholder="Enter PIN"
-          className="border p-2 mb-2 w-full rounded"
+          className="w-full px-4 py-2 border rounded-lg mb-3 focus:ring-2 focus:ring-green-500 outline-none"
           value={pin}
           onChange={(e) => setPin(e.target.value)}
         />
 
-        {/* PIN Login */}
         <button
           onClick={handlePinLogin}
-          className="bg-green-500 hover:bg-green-600 transition-all text-white px-4 py-2 rounded w-full"
+          className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
         >
           Login with PIN
         </button>
 
-        {/* Reset PIN */}
-        <button
-          onClick={handleResetPin}
-          className="text-sm text-red-500 mt-2"
-        >
-          Reset PIN
-        </button>
-
         {/* Signup */}
-        <p className="mt-4 text-center text-black dark:text-white">
-          Don't have account?{" "}
-          <Link to="/signup" className="text-blue-500">
-            Signup
+        <p className="text-center text-sm mt-6">
+          Don’t have an account?{" "}
+          <Link to="/signup" className="text-blue-600 font-medium">
+            Sign up
           </Link>
         </p>
 

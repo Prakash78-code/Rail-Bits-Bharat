@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 import { useApp } from "@/store/AppContext";
+import { FssaiBadge } from "@/components/FssaiBadge";
+import { HygieneScore } from "@/components/HygieneScore";
 import { STATIONS, COMPLAINT_REASONS, type MenuItem } from "@/data/mockData";
 import { StarRating, StarInput } from "@/components/StarRating";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
-import { Search, MapPin, ShoppingCart, Clock, QrCode, AlertTriangle, CheckCircle2, Send, X } from "lucide-react";
+import {
+  Search, MapPin, ShoppingCart, Clock, QrCode,
+  AlertTriangle, CheckCircle2, Send, X, Navigation,
+} from "lucide-react";
 import type { Order } from "@/data/mockData";
 
 export default function PassengerPortal() {
@@ -52,7 +57,10 @@ export default function PassengerPortal() {
   function addToCart(item: MenuItem) {
     setCart((prev) => {
       const existing = prev.find((c) => c.item.id === item.id);
-      if (existing) return prev.map((c) => c.item.id === item.id ? { ...c, qty: c.qty + 1 } : c);
+      if (existing)
+        return prev.map((c) =>
+          c.item.id === item.id ? { ...c, qty: c.qty + 1 } : c
+        );
       return [...prev, { item, qty: 1 }];
     });
   }
@@ -63,7 +71,13 @@ export default function PassengerPortal() {
 
   function handlePlaceOrder() {
     if (!selectedVendor || cart.length === 0) return;
-    const order = placeOrder(pnr, "Rajdhani Express", selectedStation, selectedVendorId, cart);
+    const order = placeOrder(
+      pnr,
+      "Rajdhani Express",
+      selectedStation,
+      selectedVendorId,
+      cart
+    );
     setCurrentOrder(order);
     setEta(order.eta);
     setStep("order");
@@ -74,7 +88,12 @@ export default function PassengerPortal() {
     if (!currentOrder) return;
     if (taste > 0) rateOrder(currentOrder.id, taste, hygiene, delivery);
     if (complaintReasons.length > 0) {
-      submitComplaint(currentOrder.id, currentOrder.vendorId, complaintReasons, complaintText);
+      submitComplaint(
+        currentOrder.id,
+        currentOrder.vendorId,
+        complaintReasons,
+        complaintText
+      );
     }
     setSubmitted(true);
   }
@@ -82,7 +101,8 @@ export default function PassengerPortal() {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="container mx-auto max-w-3xl">
-        {/* Progress */}
+
+        {/* ── Progress Bar ─────────────────────────────────────────────────── */}
         <div className="flex items-center gap-2 mb-8">
           {["PNR", "Vendors", "Menu", "Order", "Rate"].map((label, i) => {
             const steps = ["pnr", "vendors", "menu", "order", "rate"];
@@ -92,18 +112,24 @@ export default function PassengerPortal() {
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${active ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}>
                   {i + 1}
                 </div>
-                <span className={`text-xs font-medium hidden sm:inline ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
-                {i < 4 && <div className={`flex-1 h-0.5 ${active ? "bg-accent" : "bg-border"}`} />}
+                <span className={`text-xs font-medium hidden sm:inline ${active ? "text-foreground" : "text-muted-foreground"}`}>
+                  {label}
+                </span>
+                {i < 4 && (
+                  <div className={`flex-1 h-0.5 ${active ? "bg-accent" : "bg-border"}`} />
+                )}
               </div>
             );
           })}
         </div>
 
-        {/* Step 1: PNR */}
+        {/* ── Step 1: PNR ──────────────────────────────────────────────────── */}
         {step === "pnr" && (
           <div className="animate-fade-in bg-card rounded-2xl p-8 border border-border shadow-sm">
             <h2 className="font-display text-2xl font-bold mb-2">Enter Your PNR</h2>
-            <p className="text-muted-foreground mb-6">Enter your PNR to find food vendors along your route.</p>
+            <p className="text-muted-foreground mb-6">
+              Enter your PNR to find food vendors along your route.
+            </p>
             <div className="flex gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -123,22 +149,30 @@ export default function PassengerPortal() {
                 Search
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">Try any 5+ digit number for demo</p>
+            <p className="text-xs text-muted-foreground mt-3">
+              Try any 5+ digit number for demo
+            </p>
           </div>
         )}
 
-        {/* Step 2: Station & Vendor Selection */}
+        {/* ── Step 2: Station & Vendor Selection ───────────────────────────── */}
         {step === "vendors" && (
           <div className="animate-fade-in space-y-6">
             <div className="bg-card rounded-2xl p-6 border border-border">
               <h2 className="font-display text-xl font-bold mb-1">🚂 Rajdhani Express</h2>
-              <p className="text-sm text-muted-foreground mb-4">PNR: {pnr} • Select a station to order from</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                PNR: {pnr} • Select a station to order from
+              </p>
               <div className="grid grid-cols-3 gap-3">
                 {STATIONS.map((s) => (
                   <button
                     key={s}
                     onClick={() => setSelectedStation(s)}
-                    className={`p-3 rounded-xl border text-sm font-medium transition-all ${selectedStation === s ? "border-accent bg-accent/10 text-accent" : "border-border hover:border-accent/50"}`}
+                    className={`p-3 rounded-xl border text-sm font-medium transition-all ${
+                      selectedStation === s
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-border hover:border-accent/50"
+                    }`}
                   >
                     <MapPin className="h-4 w-4 mx-auto mb-1" />
                     {s}
@@ -149,22 +183,45 @@ export default function PassengerPortal() {
 
             {selectedStation && (
               <div className="space-y-3 animate-fade-in">
-                <h3 className="font-display text-lg font-semibold">Vendors at {selectedStation}</h3>
+                <h3 className="font-display text-lg font-semibold">
+                  Vendors at {selectedStation}
+                </h3>
                 {stationVendors.map((v) => (
                   <button
                     key={v.id}
                     onClick={() => { setSelectedVendorId(v.id); setStep("menu"); }}
-                    className="w-full text-left p-4 bg-card rounded-xl border border-border hover:border-accent/50 transition-all flex items-center justify-between group"
+                    className="w-full text-left p-4 bg-card rounded-xl border border-border hover:border-accent/50 transition-all group"
                   >
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
+                    {/* Row 1: Name + Flagged + Arrow */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
                         <span className="font-semibold">{v.name}</span>
-                        {v.flagged && <span className="px-2 py-0.5 text-xs rounded-full bg-destructive text-destructive-foreground font-bold">⚠ Flagged</span>}
+                        {v.flagged && (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-destructive text-destructive-foreground font-bold">
+                            ⚠ Flagged
+                          </span>
+                        )}
                       </div>
-                      <StarRating rating={v.hygieneRating} size={14} />
-                      <span className="text-xs text-muted-foreground mt-1 block">{v.complaintCount} complaint{v.complaintCount !== 1 ? "s" : ""}</span>
+                      <span className="text-accent opacity-0 group-hover:opacity-100 transition-opacity font-semibold text-sm">
+                        View Menu →
+                      </span>
                     </div>
-                    <span className="text-accent opacity-0 group-hover:opacity-100 transition-opacity font-semibold text-sm">View Menu →</span>
+
+                    {/* Row 2: Star Rating + Complaints */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <StarRating rating={v.hygieneRating} size={14} />
+                      <span className="text-xs text-muted-foreground">
+                        {v.complaintCount} complaint{v.complaintCount !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+
+                    {/* Row 3: FSSAI Badge */}
+                    <div className="mb-3">
+                      <FssaiBadge fssaiNumber={v.fssaiNumber} verified={v.fssaiVerified} />
+                    </div>
+
+                    {/* Row 4: Hygiene Score Bar */}
+                    <HygieneScore score={v.hygieneScore} />
                   </button>
                 ))}
               </div>
@@ -172,10 +229,15 @@ export default function PassengerPortal() {
           </div>
         )}
 
-        {/* Step 3: Menu */}
+        {/* ── Step 3: Menu ─────────────────────────────────────────────────── */}
         {step === "menu" && selectedVendor && (
           <div className="animate-fade-in space-y-6">
-            <button onClick={() => setStep("vendors")} className="text-sm text-accent hover:underline">← Back to vendors</button>
+            <button
+              onClick={() => setStep("vendors")}
+              className="text-sm text-accent hover:underline"
+            >
+              ← Back to vendors
+            </button>
             <div className="bg-card rounded-2xl p-6 border border-border">
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -193,22 +255,33 @@ export default function PassengerPortal() {
                 {selectedVendor.menu.map((item) => {
                   const inCart = cart.find((c) => c.item.id === item.id);
                   return (
-                    <div key={item.id} className="flex items-center justify-between py-3 px-4 rounded-lg bg-background border border-border">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between py-3 px-4 rounded-lg bg-background border border-border"
+                    >
                       <div>
                         <span className="font-medium">{item.name}</span>
-                        <span className="text-xs text-muted-foreground ml-2 px-2 py-0.5 rounded bg-muted">{item.category}</span>
+                        <span className="text-xs text-muted-foreground ml-2 px-2 py-0.5 rounded bg-muted">
+                          {item.category}
+                        </span>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold">₹{item.price}</span>
                         {inCart ? (
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-accent">×{inCart.qty}</span>
-                            <button onClick={() => removeFromCart(item.id)} className="text-destructive hover:bg-destructive/10 rounded-full p-1">
+                            <button
+                              onClick={() => removeFromCart(item.id)}
+                              className="text-destructive hover:bg-destructive/10 rounded-full p-1"
+                            >
                               <X className="h-4 w-4" />
                             </button>
                           </div>
                         ) : (
-                          <button onClick={() => addToCart(item)} className="px-3 py-1 text-sm rounded-lg bg-accent text-accent-foreground font-medium hover:shadow transition">
+                          <button
+                            onClick={() => addToCart(item)}
+                            className="px-3 py-1 text-sm rounded-lg bg-accent text-accent-foreground font-medium hover:shadow transition"
+                          >
                             Add
                           </button>
                         )}
@@ -246,20 +319,24 @@ export default function PassengerPortal() {
           </div>
         )}
 
-        {/* Step 4: Order Tracking */}
+        {/* ── Step 4: Order Placed ──────────────────────────────────────────── */}
         {step === "order" && currentOrder && (
           <div className="animate-fade-in space-y-6">
             <div className="bg-card rounded-2xl p-6 border border-border text-center">
+
+              {/* Success */}
               <CheckCircle2 className="h-12 w-12 text-emerald mx-auto mb-3" />
               <h2 className="font-display text-2xl font-bold mb-1">Order Placed!</h2>
               <p className="text-muted-foreground mb-4">Order #{currentOrder.id}</p>
 
+              {/* QR Code */}
               <div className="bg-background rounded-xl p-4 border border-border mb-4 inline-block">
                 <QrCode className="h-16 w-16 mx-auto text-foreground mb-2" />
                 <p className="font-mono text-sm font-bold">{currentOrder.qrCode}</p>
                 <p className="text-xs text-muted-foreground">Show to delivery partner</p>
               </div>
 
+              {/* ETA */}
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Clock className="h-5 w-5 text-accent" />
                 <span className="text-lg font-semibold">
@@ -267,24 +344,71 @@ export default function PassengerPortal() {
                 </span>
               </div>
 
-              <div className="flex justify-center gap-2 mb-6">
+              {/* Status Pills */}
+              <div className="flex justify-center gap-2 mb-6 flex-wrap">
                 {(["placed", "preparing", "out_for_delivery", "delivered"] as const).map((s) => (
-                  <div key={s} className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize ${currentOrder.status === s ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}>
+                  <div
+                    key={s}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize ${
+                      currentOrder.status === s
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
                     {s.replace(/_/g, " ")}
                   </div>
                 ))}
               </div>
 
-              {(currentOrder.status === "delivered" || eta === 0) && (
-                <button onClick={() => setStep("rate")} className="px-6 py-2.5 rounded-xl gradient-saffron text-accent-foreground font-semibold hover:shadow-lg transition-all">
-                  Rate & Review
-                </button>
-              )}
+              {/* ✅ TRACK LIVE BUTTON + RATE BUTTON */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-5">
+
+                {/* Track Live Map Button — hamesha dikhega */}
+                <a
+                  href="/tracking"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-background border-2 border-accent text-accent font-semibold hover:bg-accent/10 hover:shadow-lg transition-all w-full sm:w-auto justify-center"
+                >
+                  <Navigation className="h-4 w-4" />
+                  Track Live on Map
+                </a>
+
+                {/* Rate & Review — sirf delivered hone ke baad */}
+                {(currentOrder.status === "delivered" || eta === 0) && (
+                  <button
+                    onClick={() => setStep("rate")}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl gradient-saffron text-accent-foreground font-semibold hover:shadow-lg transition-all w-full sm:w-auto justify-center"
+                  >
+                    Rate & Review
+                  </button>
+                )}
+              </div>
+
+              {/* Revenue Split */}
+              <div className="pt-4 border-t border-border grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="font-bold text-green-600 dark:text-green-400 text-base">
+                    ₹{currentOrder.revenueSplit.vendor}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Vendor (T+1)</p>
+                </div>
+                <div>
+                  <p className="font-bold text-accent text-base">
+                    ₹{currentOrder.revenueSplit.platform}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Platform 7%</p>
+                </div>
+                <div>
+                  <p className="font-bold text-blue-500 text-base">
+                    ₹{currentOrder.revenueSplit.irctc}
+                  </p>
+                  <p className="text-xs text-muted-foreground">IRCTC 3%</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Step 5: Rating & Complaint */}
+        {/* ── Step 5: Rating & Complaint ───────────────────────────────────── */}
         {step === "rate" && currentOrder && !submitted && (
           <div className="animate-fade-in space-y-6">
             <div className="bg-card rounded-2xl p-6 border border-border">
@@ -302,8 +426,18 @@ export default function PassengerPortal() {
                 {COMPLAINT_REASONS.map((r) => (
                   <button
                     key={r}
-                    onClick={() => setComplaintReasons((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r])}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${complaintReasons.includes(r) ? "bg-destructive text-destructive-foreground border-destructive" : "border-border hover:border-destructive/50"}`}
+                    onClick={() =>
+                      setComplaintReasons((prev) =>
+                        prev.includes(r)
+                          ? prev.filter((x) => x !== r)
+                          : [...prev, r]
+                      )
+                    }
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                      complaintReasons.includes(r)
+                        ? "bg-destructive text-destructive-foreground border-destructive"
+                        : "border-border hover:border-destructive/50"
+                    }`}
                   >
                     {r}
                   </button>
@@ -328,6 +462,7 @@ export default function PassengerPortal() {
           </div>
         )}
 
+        {/* ── Submitted ────────────────────────────────────────────────────── */}
         {step === "rate" && submitted && (
           <div className="animate-fade-in bg-card rounded-2xl p-8 border border-border text-center">
             <CheckCircle2 className="h-16 w-16 text-emerald mx-auto mb-4" />
@@ -337,11 +472,21 @@ export default function PassengerPortal() {
               <p className="text-emerald font-semibold">💰 Refund Initiated (Simulation)</p>
             )}
             <button
-              onClick={() => { setStep("pnr"); setPnr(""); setCurrentOrder(null); setSubmitted(false); setTaste(0); setHygiene(0); setDelivery(0); setComplaintReasons([]); setComplaintText(""); }}
+              onClick={() => {
+                setStep("pnr");
+                setPnr("");
+                setCurrentOrder(null);
+                setSubmitted(false);
+                setTaste(0);
+                setHygiene(0);
+                setDelivery(0);
+                setComplaintReasons([]);
+                setComplaintText("");
+              }}
               className="mt-6 px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold hover:shadow-lg transition-all"
             >
               New Order
-            </button>q
+            </button>
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import { AppProvider } from "@/store/AppContext";
 import { AuthProvider } from "@/store/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import OrderTracking from "./pages/OrderTracking";
 
 import Homepage from "./pages/Homepage";
 import PassengerPortal from "./pages/PassengerPortal";
@@ -55,6 +56,9 @@ const App = () => (
               <Route path="/order-summary" element={
                 <ProtectedRoute><OrderSummary /></ProtectedRoute>
               } />
+              <Route path="/tracking" element={
+                <ProtectedRoute><OrderTracking /></ProtectedRoute>
+              } /> 
 
               <Route path="/passenger" element={<PassengerPortal />} />
               <Route path="/vendor" element={<VendorDashboard />} />

@@ -1,107 +1,125 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
-import Loader from "../components/Loader";
-import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
 
-const SignupPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [pin, setPin] = useState("");
-  const [loading, setLoading] = useState(false);
-
+export default function SignupPage() {
   const navigate = useNavigate();
 
-  const handleSignup = async () => {
-    if (!email || !password || !pin) {
-      toast.error("All fields required ❌");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (form.password !== form.confirmPassword) {
+      alert("Passwords do not match ❌");
       return;
     }
 
-    if (pin.length !== 4) {
-      toast.error("PIN must be 4 digits ❌");
-      return;
-    }
+    // 👉 Backend call yaha hoga future me
+    console.log(form);
 
-    try {
-      setLoading(true);
-
-      // 🔐 Firebase signup
-      await createUserWithEmailAndPassword(auth, email, password);
-
-      // 🔢 Save PIN
-      localStorage.setItem("userPIN", pin);
-
-      toast.success("Signup Success ✅");
-
-      navigate("/login");
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
+    alert("Account Created Successfully 🚀");
+    navigate("/login");
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-md w-full max-w-md p-8">
 
-      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 w-full max-w-md transition-all">
-
-        <h1 className="text-2xl font-bold mb-4 text-center text-black dark:text-white">
-          Signup
+        {/* Logo */}
+        <h1 className="text-2xl font-semibold text-center mb-2">
+          Rail Bites Bharat 🚆
         </h1>
 
-        {/* Email */}
-        <input
-          type="email"
-          placeholder="Email"
-          className="border p-2 mb-2 w-full rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <p className="text-sm text-gray-500 text-center mb-6">
+          Create your account
+        </p>
 
-        {/* Password */}
-        <input
-          type="password"
-          placeholder="Password (min 6 chars)"
-          className="border p-2 mb-2 w-full rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* PIN */}
-        <input
-          type="password"
-          placeholder="Set 4-digit PIN"
-          className="border p-2 mb-2 w-full rounded"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-        />
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            value={form.name}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          />
 
-        {/* Button / Loader */}
-        {loading ? (
-          <Loader />
-        ) : (
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+
           <button
-            onClick={handleSignup}
-            className="bg-green-500 hover:bg-green-600 transition-all text-white px-4 py-2 rounded w-full"
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
           >
-            Signup
+            Create Account
           </button>
-        )}
+        </form>
 
-        {/* Login */}
-        <p className="mt-4 text-center text-black dark:text-white">
-          Already have account?{" "}
-          <Link to="/login" className="text-blue-500">
-            Login
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-1 h-px bg-gray-300"></div>
+          <span className="px-3 text-sm text-gray-500">or</span>
+          <div className="flex-1 h-px bg-gray-300"></div>
+        </div>
+
+        {/* Google Signup Button */}
+        <button className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-100 transition">
+          <img
+            src="https://www.svgrepo.com/show/475656/google-color.svg"
+            alt="google"
+            className="w-5 h-5"
+          />
+          Sign up with Google
+        </button>
+
+        {/* Login Link */}
+        <p className="text-center text-sm mt-6">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-600 font-medium">
+            Sign in
           </Link>
         </p>
 
       </div>
     </div>
   );
-};
-
-export default SignupPage;
+}
