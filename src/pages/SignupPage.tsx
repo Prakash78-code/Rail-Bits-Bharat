@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
+  updateProfile,
 } from "firebase/auth";
 import { auth, provider } from "../firebase";
 import { toast } from "sonner";
@@ -40,19 +41,30 @@ export default function SignupPage() {
     try {
       setLoading(true);
 
-      await createUserWithEmailAndPassword(
+      const userCred = await createUserWithEmailAndPassword(
         auth,
         form.email,
         form.password
       );
 
+      // ✅ Save name in Firebase
+      await updateProfile(userCred.user, {
+        displayName: form.name,
+      });
+
       toast.success("Account Created 🚀");
 
-      // 👉 PIN page pe bhej
-      navigate("/set-pin");
+      // 👉 Check PIN
+      const savedPin = localStorage.getItem("userPIN");
+
+      if (!savedPin) {
+        navigate("/set-pin");
+      } else {
+        navigate("/menu");
+      }
 
     } catch (err) {
-      toast.error("Signup failed ❌");
+      toast.error(err.message || "Signup failed ❌");
     } finally {
       setLoading(false);
     }
@@ -61,14 +73,20 @@ export default function SignupPage() {
   // 🔥 Google Signup
   const handleGoogleSignup = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+
       toast.success("Google Signup Success 🚀");
 
-      // 👉 direct PIN set
-      navigate("/set-pin");
+      const savedPin = localStorage.getItem("userPIN");
+
+      if (!savedPin) {
+        navigate("/set-pin");
+      } else {
+        navigate("/menu");
+      }
 
     } catch (err) {
-      toast.error("Google signup failed ❌");
+      toast.error(err.message || "Google signup failed ❌");
     }
   };
 

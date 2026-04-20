@@ -3,7 +3,7 @@ import { useCartStore } from "../store/cartStore";
 import { useNavigate } from "react-router-dom";
 
 const CheckoutPage = () => {
-  const { cart } = useCartStore();
+  const { cart, clearCart } = useCartStore();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -12,7 +12,6 @@ const CheckoutPage = () => {
   const [seat, setSeat] = useState("");
   const [station, setStation] = useState("");
 
-  // 💰 Coupon
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
 
@@ -21,7 +20,6 @@ const CheckoutPage = () => {
     0
   );
 
-  // 🎯 Apply Coupon
   const applyCoupon = () => {
     if (coupon === "SAVE50") {
       setDiscount(50);
@@ -36,38 +34,67 @@ const CheckoutPage = () => {
 
   const finalTotal = total - discount;
 
-  const handleOrder = () => {
-    // ❗ validation
-    if (!name || !pnr || !train || !seat || !station) {
-      alert("Please fill all details ❗");
-      return;
+  // 🚀 FINAL ORDER FUNCTION (FIXED)
+  const handleOrder = async () => {
+    try {
+      if (!name || !pnr || !train || !seat || !station) {
+        alert("Please fill all details ❗");
+        return;
+      }
+
+      if (pnr.length !== 10) {
+        alert("PNR must be 10 digits ❗");
+        return;
+      }
+
+      if (cart.length === 0) {
+        alert("Cart is empty ❗");
+        return;
+      }
+
+      // ✅ FINAL ORDER OBJECT (SOURCE OF TRUTH)
+      const finalOrder = {
+        id: Date.now(),
+        items: cart,
+        total: finalTotal,
+        name,
+        pnr,
+        train,
+        seat,
+        station,
+        status: "placed",
+      };
+
+      const res = await fetch("http://localhost:5000/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(finalOrder),
+      });
+
+      const data = await res.json();
+
+      console.log("BACKEND RESPONSE:", data);
+
+      if (data.success) {
+        alert("Order Placed Successfully 🚆🍱");
+
+        clearCart();
+
+        // 🔥 IMPORTANT FIX (no undefined issue)
+        navigate("/order-summary", {
+          state: finalOrder,
+        });
+
+      } else {
+        alert(data.error || "Order Failed ❌");
+      }
+
+    } catch (err) {
+      console.error("❌ ERROR:", err);
+      alert("Server Error ❌");
     }
-
-    if (pnr.length !== 10) {
-      alert("PNR must be 10 digits ❗");
-      return;
-    }
-
-    if (cart.length === 0) {
-      alert("Cart is empty ❗");
-      return;
-    }
-
-    const order = {
-      id: Date.now(),
-      items: cart,
-      total: finalTotal,
-      name,
-      pnr,
-      train,
-      seat,
-      station,
-      status: "placed",
-    };
-
-    alert("Order Placed Successfully 🚆🍱");
-
-    navigate("/order-summary", { state: order });
   };
 
   return (
@@ -77,7 +104,6 @@ const CheckoutPage = () => {
         🚆 Train Order Details
       </h1>
 
-      {/* Inputs */}
       <input
         type="text"
         placeholder="Your Name"
@@ -122,11 +148,11 @@ const CheckoutPage = () => {
         <option value="Varanasi">Varanasi</option>
       </select>
 
-      {/* 💰 Coupon */}
+      {/* Coupon */}
       <div className="mt-3">
         <input
           type="text"
-          placeholder="Enter Coupon (SAVE50 / SAVE10)"
+          placeholder="Coupon (SAVE50 / SAVE10)"
           className="border p-2 w-full rounded"
           value={coupon}
           onChange={(e) => setCoupon(e.target.value)}
@@ -140,7 +166,7 @@ const CheckoutPage = () => {
         </button>
       </div>
 
-      {/* 💵 Total */}
+      {/* Total */}
       <div className="mt-4">
         <p>Total: ₹{total}</p>
         <p className="text-green-600">Discount: ₹{discount}</p>
@@ -149,13 +175,14 @@ const CheckoutPage = () => {
         </h2>
       </div>
 
-      {/* 🚀 Order */}
+      {/* Order Button */}
       <button
         onClick={handleOrder}
-        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 mt-4 w-full rounded"
+        className="bg-green-600 text-white px-4 py-2 mt-4 w-full rounded"
       >
         Place Order 🚆
       </button>
+
     </div>
   );
 };

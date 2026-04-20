@@ -11,14 +11,14 @@ const MenuPage = () => {
 
   const allItems = vendors.flatMap((v) => v.menu);
 
-  // 🔍 Search
+  // 🔍 Search filter
   const filterItems = (items: MenuItem[]) => {
     return items.filter((item) =>
       item.name.toLowerCase().includes(search.toLowerCase())
     );
   };
 
-  // 🤖 Recommendation
+  // 🤖 Recommendation logic
   const getRecommendations = () => {
     if (cart.length === 0) return allItems.slice(0, 4);
 
@@ -58,9 +58,9 @@ const MenuPage = () => {
             .filter((item) =>
               item.name.toLowerCase().includes(search.toLowerCase())
             )
-            .map((item) => (
+            .map((item, index) => (
               <div
-                key={item.id}
+                key={`rec-${item.id}-${index}`}  // ✅ FIXED UNIQUE KEY
                 className="border rounded-xl p-3 shadow hover:shadow-md transition"
               >
                 <h3 className="font-medium">{item.name}</h3>
@@ -84,8 +84,8 @@ const MenuPage = () => {
         if (filteredMenu.length === 0) return null;
 
         return (
-          <div key={vendor.id} className="mb-6">
-            
+          <div key={`vendor-${vendor.id}`} className="mb-6">
+
             {/* Vendor Header */}
             <h2 className="text-xl font-semibold">
               {vendor.name}
@@ -94,11 +94,11 @@ const MenuPage = () => {
               📍 {vendor.station}
             </p>
 
-            {/* 🔥 SAME CARD GRID */}
+            {/* Menu Items */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {filteredMenu.map((item: MenuItem) => (
+              {filteredMenu.map((item: MenuItem, index: number) => (
                 <div
-                  key={item.id}
+                  key={`item-${vendor.id}-${item.id}-${index}`} // ✅ FIXED
                   className="border rounded-xl p-3 shadow hover:shadow-md transition"
                 >
                   <h3 className="font-medium">{item.name}</h3>
@@ -117,7 +117,7 @@ const MenuPage = () => {
         );
       })}
 
-      {/* ❌ No Result */}
+      {/* ❌ No Results */}
       {vendors.every(
         (v) => filterItems(v.menu).length === 0
       ) && (

@@ -17,7 +17,9 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   // 🔐 Email Login
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
     if (!email || !password) {
       toast.error("Enter email & password ❌");
       return;
@@ -26,10 +28,14 @@ const LoginPage = () => {
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
+
+      const savedPin = localStorage.getItem("userPIN");
+
       toast.success("Login Success ✅");
-      navigate("/menu");
+      navigate(savedPin ? "/menu" : "/set-pin");
+
     } catch (err) {
-      toast.error("Invalid credentials ❌");
+      toast.error(err.message || "Invalid credentials ❌");
     } finally {
       setLoading(false);
     }
@@ -39,24 +45,21 @@ const LoginPage = () => {
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, provider);
-      toast.success("Google Login Success 🚀");
 
-      // 👉 check PIN exist or not
       const savedPin = localStorage.getItem("userPIN");
 
-      if (!savedPin) {
-        navigate("/set-pin");
-      } else {
-        navigate("/menu");
-      }
+      toast.success("Google Login Success 🚀");
+      navigate(savedPin ? "/menu" : "/set-pin");
 
     } catch (err) {
-      toast.error("Google login failed ❌");
+      toast.error(err.message || "Google login failed ❌");
     }
   };
 
   // 🔢 PIN Login
-  const handlePinLogin = () => {
+  const handlePinLogin = (e) => {
+    e.preventDefault();
+
     const savedPin = localStorage.getItem("userPIN");
 
     if (!savedPin) {
@@ -83,7 +86,7 @@ const LoginPage = () => {
       await sendPasswordResetEmail(auth, email);
       toast.success("Reset link sent 📩");
     } catch (err) {
-      toast.error("Error sending email ❌");
+      toast.error(err.message || "Error sending email ❌");
     }
   };
 
@@ -98,74 +101,82 @@ const LoginPage = () => {
           Login to your account
         </p>
 
-        {/* Email */}
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full px-4 py-2 border rounded-lg mb-3"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        {/* EMAIL FORM */}
+        <form onSubmit={handleLogin}>
 
-        {/* Password */}
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full px-4 py-2 border rounded-lg mb-2"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <input
+            type="email"
+            placeholder="Email"
+            autoComplete="email"
+            className="w-full px-4 py-2 border rounded-lg mb-3"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-        {/* Forgot Password */}
-        <button
-          onClick={handleForgotPassword}
-          className="text-sm text-blue-600 mb-4"
-        >
-          Forgot Password?
-        </button>
+          <input
+            type="password"
+            placeholder="Password"
+            autoComplete="current-password"
+            className="w-full px-4 py-2 border rounded-lg mb-2"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-        {/* Login Button */}
-        <button
-          onClick={handleLogin}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg mb-3"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="text-sm text-blue-600 mb-4"
+          >
+            Forgot Password?
+          </button>
 
-        {/* Google Button */}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg mb-3"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+
+        </form>
+
+        {/* GOOGLE */}
         <button
           onClick={handleGoogleLogin}
           className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-100 mb-4"
         >
           <img
             src="https://www.svgrepo.com/show/475656/google-color.svg"
+            alt="Google"
             className="w-5 h-5"
           />
           Continue with Google
         </button>
 
-        {/* Divider */}
+        {/* DIVIDER */}
         <div className="flex items-center my-4">
           <div className="flex-1 h-px bg-gray-300"></div>
           <span className="px-3 text-sm text-gray-500">or</span>
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        {/* PIN */}
-        <input
-          type="password"
-          placeholder="Enter PIN"
-          className="w-full px-4 py-2 border rounded-lg mb-3"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-        />
+        {/* PIN FORM */}
+        <form onSubmit={handlePinLogin}>
+          <input
+            type="password"
+            placeholder="Enter PIN"
+            autoComplete="new-password"
+            className="w-full px-4 py-2 border rounded-lg mb-3"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+          />
 
-        <button
-          onClick={handlePinLogin}
-          className="w-full bg-green-600 text-white py-2 rounded-lg"
-        >
-          Login with PIN
-        </button>
+          <button
+            type="submit"
+            className="w-full bg-green-600 text-white py-2 rounded-lg"
+          >
+            Login with PIN
+          </button>
+        </form>
 
         <p className="text-center text-sm mt-6">
           Don’t have an account?{" "}

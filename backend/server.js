@@ -6,41 +6,83 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🗄️ Temporary DB (array)
-let orders = [];
-
-// ✅ Test route
+// 🏠 Test route
 app.get("/", (req, res) => {
-  res.send("Backend running 🚀");
+  res.send("Backend working 🚀");
 });
 
-// ✅ Create Order
+// 🧾 CREATE ORDER (FIXED FOR YOUR FRONTEND)
 app.post("/create-order", (req, res) => {
   try {
-    const order = req.body;
+    const orderData = req.body;
 
-    if (!order || !order.total) {
-      return res.status(400).json({ error: "Invalid order data" });
+    console.log("Order received:", orderData);
+
+    if (!orderData || !orderData.total) {
+      return res.json({
+        success: false,
+        error: "Total is required",
+      });
     }
 
-    orders.push(order);
+    const savedOrder = {
+      ...orderData,
+      id: "order_" + Date.now(),
+      status: "placed",
+    };
 
-    res.json({
-      success: true,
-      message: "Order saved",
-      order,
+    return res.json({
+      success: true,        // ✅ IMPORTANT FIX
+      order: savedOrder,    // ✅ frontend expects this
     });
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+  } catch (error) {
+    console.log("ERROR:", error);
+
+    return res.json({
+      success: false,
+      error: "Server error",
+    });
   }
+});
+
+// 💳 FAKE PAYMENT VERIFY
+app.post("/verify-payment", (req, res) => {
+  try {
+    const { order_id, payment_id } = req.body;
+
+    return res.json({
+      success: true,
+      message: "Payment successful (FAKE)",
+      order_id: order_id || "fake_order",
+      payment_id: payment_id || "fake_payment",
+    });
+
+  } catch (error) {
+    console.log("VERIFY ERROR:", error);
+
+    return res.json({
+      success: false,
+      message: "Verification failed",
+    });
+  }
+});
+
+// 👀 Orders store (optional)
+let orders = [];
+
+app.post("/save-order", (req, res) => {
+  orders.push(req.body);
+  res.json({ success: true });
 });
 
 app.get("/orders", (req, res) => {
   res.json(orders);
 });
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000 🚀");
+// 🚀 START SERVER
+const PORT = 5000;
+
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT, "🚀");
 });

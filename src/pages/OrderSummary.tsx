@@ -3,12 +3,26 @@ import { useEffect, useState } from "react";
 
 const OrderSummary = () => {
   const location = useLocation();
-  const order = location.state;
 
-  // 🚚 Live Tracking
+  // 🔥 SAFE PARSE FIX
+  const getStoredOrder = () => {
+    try {
+      const data = localStorage.getItem("latestOrder");
+      return data ? JSON.parse(data) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const [order, setOrder] = useState(location.state || getStoredOrder());
   const [status, setStatus] = useState("Preparing");
 
   useEffect(() => {
+    if (location.state) {
+      localStorage.setItem("latestOrder", JSON.stringify(location.state));
+      setOrder(location.state); // 🔥 important fix
+    }
+
     const timer1 = setTimeout(() => setStatus("Out for Delivery 🚚"), 5000);
     const timer2 = setTimeout(() => setStatus("Delivered ✅"), 10000);
 
@@ -16,7 +30,7 @@ const OrderSummary = () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, []);
+  }, [location.state]);
 
   if (!order) {
     return (
@@ -38,7 +52,6 @@ const OrderSummary = () => {
         🚆 Order Summary
       </h1>
 
-      {/* 🔹 Order Info */}
       <div className="bg-gray-100 p-3 rounded mb-3 text-sm">
         <p><b>Order ID:</b> {order.id}</p>
         <p><b>Name:</b> {order.name}</p>
@@ -48,31 +61,27 @@ const OrderSummary = () => {
         <p><b>Station:</b> {order.station}</p>
       </div>
 
-      {/* 🔹 Items */}
       <h2 className="mt-3 font-semibold text-lg">🍱 Items:</h2>
+
       <div className="bg-gray-50 p-3 rounded">
-        {order.items.map((c: any, index: number) => (
+        {order.items?.map((c, index) => (
           <div key={index} className="flex justify-between border-b py-1">
-            <span>
-              {c.item.name} × {c.qty}
-            </span>
-            <span>₹{c.item.price * c.qty}</span>
+            <span>{c.item?.name} × {c.qty}</span>
+            <span>₹{(c.item?.price || 0) * c.qty}</span>
           </div>
         ))}
       </div>
 
-      {/* 🔹 Total */}
       <h2 className="mt-4 text-lg font-bold text-right">
         Total: ₹{order.total}
       </h2>
 
-      {/* 🚚 Live Status */}
+      {/* 🚚 Status */}
       <div className="mt-4 text-center">
         <p className="font-semibold text-blue-600">
           Status: {status}
         </p>
 
-        {/* Progress bar */}
         <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
           <div
             className={`h-2 rounded-full transition-all duration-500 ${
@@ -86,12 +95,10 @@ const OrderSummary = () => {
         </div>
       </div>
 
-      {/* 🔹 Success */}
       <p className="mt-3 text-green-600 font-semibold text-center">
         🎉 Order Placed Successfully
       </p>
 
-      {/* 🔹 Back Button */}
       <Link to="/menu">
         <button className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full">
           Back to Menu

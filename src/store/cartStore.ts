@@ -10,6 +10,9 @@ type CartState = {
   cart: CartItem[];
   addToCart: (item: MenuItem) => void;
   removeFromCart: (id: string) => void;
+
+  // 🆕 ADD THIS
+  clearCart: () => void;
 };
 
 export const useCartStore = create<CartState>((set) => ({
@@ -37,5 +40,11 @@ export const useCartStore = create<CartState>((set) => ({
   removeFromCart: (id) =>
     set((state) => ({
       cart: state.cart.filter((c) => c.item.id !== id),
+    })),
+
+  // 🆕 FIXED: clearCart
+  clearCart: () =>
+    set(() => ({
+      cart: [],
     })),
 }));
