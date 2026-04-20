@@ -8,6 +8,8 @@ import {
   Brain, TrendingUp, MapPin, Clock, AlertTriangle,
   CheckCircle2, Zap, ChefHat, Users,
 } from "lucide-react";
+// 🔥 BACKEND URL
+const API_URL = "https://rail-bits-bharat.onrender.com";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface StationDemand {

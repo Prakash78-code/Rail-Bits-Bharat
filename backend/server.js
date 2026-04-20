@@ -3,15 +3,44 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(cors());
+/* ---------------- MIDDLEWARE ---------------- */
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+}));
+
 app.use(express.json());
 
-// 🏠 Test route
+/* ---------------- HEALTH CHECK ---------------- */
 app.get("/", (req, res) => {
   res.send("Backend working 🚀");
 });
 
-// 🧾 CREATE ORDER (FIXED FOR YOUR FRONTEND)
+/* ---------------- AI FORECAST API ---------------- */
+app.get("/forecast", (req, res) => {
+  try {
+    const demand = Math.floor(150 + Math.random() * 300);
+
+    return res.json({
+      success: true,
+      data: {
+        demand,
+        station: "Delhi",
+        message: "AI forecast generated successfully 🚆",
+      }
+    });
+
+  } catch (error) {
+    console.log("FORECAST ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: "Forecast error",
+    });
+  }
+});
+
+/* ---------------- CREATE ORDER ---------------- */
 app.post("/create-order", (req, res) => {
   try {
     const orderData = req.body;
@@ -32,21 +61,21 @@ app.post("/create-order", (req, res) => {
     };
 
     return res.json({
-      success: true,        // ✅ IMPORTANT FIX
-      order: savedOrder,    // ✅ frontend expects this
+      success: true,
+      order: savedOrder,
     });
 
   } catch (error) {
-    console.log("ERROR:", error);
+    console.log("CREATE ORDER ERROR:", error);
 
-    return res.json({
+    return res.status(500).json({
       success: false,
       error: "Server error",
     });
   }
 });
 
-// 💳 FAKE PAYMENT VERIFY
+/* ---------------- PAYMENT VERIFY ---------------- */
 app.post("/verify-payment", (req, res) => {
   try {
     const { order_id, payment_id } = req.body;
@@ -61,14 +90,14 @@ app.post("/verify-payment", (req, res) => {
   } catch (error) {
     console.log("VERIFY ERROR:", error);
 
-    return res.json({
+    return res.status(500).json({
       success: false,
       message: "Verification failed",
     });
   }
 });
 
-// 👀 Orders store (optional)
+/* ---------------- ORDERS STORAGE (TEMP) ---------------- */
 let orders = [];
 
 app.post("/save-order", (req, res) => {
@@ -80,8 +109,8 @@ app.get("/orders", (req, res) => {
   res.json(orders);
 });
 
-// 🚀 START SERVER
-const PORT = 5000;
+/* ---------------- START SERVER ---------------- */
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log("Server running on port", PORT, "🚀");

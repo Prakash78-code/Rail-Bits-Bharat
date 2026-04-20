@@ -1,0 +1,1 @@
+export const API_URL = https://rail-bits-bharat.onrender.com

@@ -65,7 +65,7 @@ const CheckoutPage = () => {
         status: "placed",
       };
 
-      const res = await fetch("http://localhost:5000/create-order", {
+      const res = await fetch("https://rail-bits-bharat.onrender.com/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
