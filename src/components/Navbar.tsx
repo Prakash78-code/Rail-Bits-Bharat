@@ -11,6 +11,7 @@ import {
   Moon,
   Sun,
   CloudSun,
+  UserPlus, // ✅ NEW ICON for vendor register
 } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
 import { signOut } from "firebase/auth";
@@ -24,7 +25,8 @@ const navItems = [
   { to: "/passenger", icon: User },
   { to: "/vendor", icon: ChefHat },
   { to: "/admin", icon: Shield },
-  { to: "/forecast", icon: CloudSun }, // 🌤️ NEW ADDED LINK
+  { to: "/forecast", icon: CloudSun },
+  { to: "/vendor-register", icon: UserPlus }, // 🔥 ADDED HERE
 ];
 
 export function Navbar() {

@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 import OrderTracking from "./pages/OrderTracking";
 import DemandForecast from "./pages/DemandForecast";
+import VendorRegister from "./pages/VendorRegister";
 
 import Homepage from "./pages/Homepage";
 import PassengerPortal from "./pages/PassengerPortal";
@@ -49,6 +50,7 @@ const App = () => (
 
               {/* 🔑 Extra Public Route */}
               <Route path="/set-pin" element={<SetPinPage />} />
+              <Route path="/vendor-register" element={<VendorRegister />} />
 
               {/* 🔐 Protected Routes */}
               <Route
