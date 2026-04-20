@@ -1,180 +1,92 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  updateProfile,
-} from "firebase/auth";
-import { auth, provider } from "../firebase";
-import { toast } from "sonner";
+import { Train, Mail, Lock, User, Phone, Eye, EyeOff, Chrome } from "lucide-react";
 
 export default function SignupPage() {
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // 🔐 Email Signup
-  const handleSubmit = async (e) => {
+  async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-
-    if (!form.name || !form.email || !form.password) {
-      toast.error("Fill all fields ❌");
-      return;
-    }
-
-    if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match ❌");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const userCred = await createUserWithEmailAndPassword(
-        auth,
-        form.email,
-        form.password
-      );
-
-      // ✅ Save name in Firebase
-      await updateProfile(userCred.user, {
-        displayName: form.name,
-      });
-
-      toast.success("Account Created 🚀");
-
-      // 👉 Check PIN
-      const savedPin = localStorage.getItem("userPIN");
-
-      if (!savedPin) {
-        navigate("/set-pin");
-      } else {
-        navigate("/menu");
-      }
-
-    } catch (err) {
-      toast.error(err.message || "Signup failed ❌");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 🔥 Google Signup
-  const handleGoogleSignup = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-
-      toast.success("Google Signup Success 🚀");
-
-      const savedPin = localStorage.getItem("userPIN");
-
-      if (!savedPin) {
-        navigate("/set-pin");
-      } else {
-        navigate("/menu");
-      }
-
-    } catch (err) {
-      toast.error(err.message || "Google signup failed ❌");
-    }
-  };
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 1200));
+    navigate("/set-pin");
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-md w-full max-w-md p-8">
-
-        <h1 className="text-2xl font-semibold text-center mb-2">
-          Rail Bites Bharat 🚆
-        </h1>
-
-        <p className="text-sm text-gray-500 text-center mb-6">
-          Create your account
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg"
-          />
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg"
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg"
-          />
-
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg"
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg"
-          >
-            {loading ? "Creating..." : "Create Account"}
-          </button>
-        </form>
-
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <span className="px-3 text-sm text-gray-500">or</span>
-          <div className="flex-1 h-px bg-gray-300"></div>
+    <div className="min-h-screen pt-16 flex items-center justify-center px-4 bg-gradient-to-br from-background to-muted">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-2xl gradient-saffron flex items-center justify-center mx-auto mb-4 shadow-lg animate-float">
+            <Train className="h-8 w-8 text-white" />
+          </div>
+          <h1 className="font-display text-2xl font-bold">Create Account</h1>
+          <p className="text-muted-foreground mt-1">Join RailBite Bharat</p>
         </div>
 
-        {/* Google Button */}
-        <button
-          onClick={handleGoogleSignup}
-          className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-100"
-        >
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            className="w-5 h-5"
-          />
-          Sign up with Google
-        </button>
+        <div className="bg-card rounded-2xl border border-border p-6 shadow-xl">
+          <form onSubmit={handleSignup} className="space-y-4">
+            {[
+              { key: "name", label: "Full Name", placeholder: "Your name", icon: User, type: "text" },
+              { key: "email", label: "Email", placeholder: "you@example.com", icon: Mail, type: "email" },
+              { key: "phone", label: "Phone (+91)", placeholder: "10-digit mobile", icon: Phone, type: "tel" },
+            ].map(f => (
+              <div key={f.key}>
+                <label className="text-sm font-medium mb-1 block">{f.label}</label>
+                <div className="relative">
+                  <f.icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type={f.type}
+                    value={form[f.key as keyof typeof form]}
+                    onChange={e => setForm(ff => ({...ff, [f.key]: e.target.value}))}
+                    placeholder={f.placeholder}
+                    className="input-base pl-10"
+                    required
+                  />
+                </div>
+              </div>
+            ))}
+            <div>
+              <label className="text-sm font-medium mb-1 block">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type={showPw ? "text" : "password"}
+                  value={form.password}
+                  onChange={e => setForm(ff => ({...ff, password: e.target.value}))}
+                  placeholder="Min 8 characters"
+                  className="input-base pl-10 pr-10"
+                  required
+                />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
 
-        <p className="text-center text-sm mt-6">
-          Already have an account?{" "}
-          <Link to="/login" className="text-blue-600 font-medium">
-            Sign in
-          </Link>
-        </p>
+            <button type="submit" disabled={loading} className="btn-primary w-full py-3">
+              {loading
+                ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating account…</span>
+                : "Create Account"}
+            </button>
+          </form>
 
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs text-muted-foreground bg-card px-2">or</div>
+          </div>
+
+          <button onClick={() => navigate("/passenger")} className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-border hover:bg-muted transition-colors text-sm font-medium">
+            <Chrome className="h-4 w-4 text-blue-500" /> Sign up with Google
+          </button>
+
+          <p className="text-center text-sm text-muted-foreground mt-5">
+            Already have an account?{" "}
+            <Link to="/login" className="text-accent hover:underline font-medium">Sign in</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
