@@ -37,12 +37,10 @@ app.post("/create-order", (req, res) => {
   }
 });
 
-// ✅ Get all orders (ADMIN)
 app.get("/orders", (req, res) => {
   res.json(orders);
 });
 
-// 🚀 Start server
 app.listen(5000, () => {
   console.log("Server running on port 5000 🚀");
 });

@@ -1,10 +1,12 @@
 import { ShieldCheck, ShieldAlert } from "lucide-react";
+import { GoogleAuthProvider } from "firebase/auth";
 
 interface FssaiBadgeProps {
   fssaiNumber: string;
   verified: boolean;
 }
 
+export const provider = new GoogleAuthProvider();
 export const FssaiBadge = ({ fssaiNumber, verified }: FssaiBadgeProps) => {
   return (
     <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold w-fit border ${

@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth"; // ✅ ADD THIS
+import { getAuth, GoogleAuthProvider } from "firebase/auth"; // ✅ add
 
 const firebaseConfig = {
   apiKey: "AIzaSyBB2TvKdfjoqWuxvoRF6xEIRWa9pvSx0aI",
@@ -11,8 +11,9 @@ const firebaseConfig = {
   measurementId: "G-GHTHE0XHJ4"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// ✅ THIS IS IMPORTANT
 export const auth = getAuth(app);
+
+// 🔥 ADD THIS (Google login ke liye)
+export const provider = new GoogleAuthProvider();

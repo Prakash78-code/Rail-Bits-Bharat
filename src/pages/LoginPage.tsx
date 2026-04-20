@@ -3,8 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  signInWithPopup,
 } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, provider } from "../firebase";
 import { toast } from "sonner";
 
 const LoginPage = () => {
@@ -31,6 +32,26 @@ const LoginPage = () => {
       toast.error("Invalid credentials ❌");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🔥 Google Login
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+      toast.success("Google Login Success 🚀");
+
+      // 👉 check PIN exist or not
+      const savedPin = localStorage.getItem("userPIN");
+
+      if (!savedPin) {
+        navigate("/set-pin");
+      } else {
+        navigate("/menu");
+      }
+
+    } catch (err) {
+      toast.error("Google login failed ❌");
     }
   };
 
@@ -70,7 +91,6 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="bg-white border border-gray-200 rounded-2xl shadow-md w-full max-w-md p-8">
 
-        {/* Title */}
         <h1 className="text-2xl font-semibold text-center mb-2">
           Welcome Back 🚆
         </h1>
@@ -82,7 +102,7 @@ const LoginPage = () => {
         <input
           type="email"
           placeholder="Email"
-          className="w-full px-4 py-2 border rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full px-4 py-2 border rounded-lg mb-3"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -91,7 +111,7 @@ const LoginPage = () => {
         <input
           type="password"
           placeholder="Password"
-          className="w-full px-4 py-2 border rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full px-4 py-2 border rounded-lg mb-2"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -107,35 +127,46 @@ const LoginPage = () => {
         {/* Login Button */}
         <button
           onClick={handleLogin}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+          className="w-full bg-blue-600 text-white py-2 rounded-lg mb-3"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
 
+        {/* Google Button */}
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-100 mb-4"
+        >
+          <img
+            src="https://www.svgrepo.com/show/475656/google-color.svg"
+            className="w-5 h-5"
+          />
+          Continue with Google
+        </button>
+
         {/* Divider */}
-        <div className="flex items-center my-6">
+        <div className="flex items-center my-4">
           <div className="flex-1 h-px bg-gray-300"></div>
           <span className="px-3 text-sm text-gray-500">or</span>
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        {/* PIN Login */}
+        {/* PIN */}
         <input
           type="password"
           placeholder="Enter PIN"
-          className="w-full px-4 py-2 border rounded-lg mb-3 focus:ring-2 focus:ring-green-500 outline-none"
+          className="w-full px-4 py-2 border rounded-lg mb-3"
           value={pin}
           onChange={(e) => setPin(e.target.value)}
         />
 
         <button
           onClick={handlePinLogin}
-          className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+          className="w-full bg-green-600 text-white py-2 rounded-lg"
         >
           Login with PIN
         </button>
 
-        {/* Signup */}
         <p className="text-center text-sm mt-6">
           Don’t have an account?{" "}
           <Link to="/signup" className="text-blue-600 font-medium">

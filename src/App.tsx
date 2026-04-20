@@ -23,6 +23,9 @@ import OrderSummary from "./pages/OrderSummary";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
+// 🔥 ADD THIS
+import SetPinPage from "./pages/SetPinPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -42,6 +45,9 @@ const App = () => (
               <Route path="/" element={<Homepage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+
+              {/* 🔥 NEW ROUTE */}
+              <Route path="/set-pin" element={<SetPinPage />} />
 
               {/* 🔐 Protected */}
               <Route path="/menu" element={

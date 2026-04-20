@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
+import { auth, provider } from "../firebase";
+import { toast } from "sonner";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -11,30 +17,65 @@ export default function SignupPage() {
     confirmPassword: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  // 🔐 Email Signup
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match ❌");
+    if (!form.name || !form.email || !form.password) {
+      toast.error("Fill all fields ❌");
       return;
     }
 
-    // 👉 Backend call yaha hoga future me
-    console.log(form);
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match ❌");
+      return;
+    }
 
-    alert("Account Created Successfully 🚀");
-    navigate("/login");
+    try {
+      setLoading(true);
+
+      await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
+
+      toast.success("Account Created 🚀");
+
+      // 👉 PIN page pe bhej
+      navigate("/set-pin");
+
+    } catch (err) {
+      toast.error("Signup failed ❌");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 Google Signup
+  const handleGoogleSignup = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+      toast.success("Google Signup Success 🚀");
+
+      // 👉 direct PIN set
+      navigate("/set-pin");
+
+    } catch (err) {
+      toast.error("Google signup failed ❌");
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="bg-white border border-gray-200 rounded-2xl shadow-md w-full max-w-md p-8">
 
-        {/* Logo */}
         <h1 className="text-2xl font-semibold text-center mb-2">
           Rail Bites Bharat 🚆
         </h1>
@@ -43,7 +84,6 @@ export default function SignupPage() {
           Create your account
         </p>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <input
@@ -52,8 +92,7 @@ export default function SignupPage() {
             placeholder="Full Name"
             value={form.name}
             onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full px-4 py-2 border rounded-lg"
           />
 
           <input
@@ -62,8 +101,7 @@ export default function SignupPage() {
             placeholder="Email"
             value={form.email}
             onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full px-4 py-2 border rounded-lg"
           />
 
           <input
@@ -72,8 +110,7 @@ export default function SignupPage() {
             placeholder="Password"
             value={form.password}
             onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full px-4 py-2 border rounded-lg"
           />
 
           <input
@@ -82,15 +119,15 @@ export default function SignupPage() {
             placeholder="Confirm Password"
             value={form.confirmPassword}
             onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full px-4 py-2 border rounded-lg"
           />
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg"
           >
-            Create Account
+            {loading ? "Creating..." : "Create Account"}
           </button>
         </form>
 
@@ -101,17 +138,18 @@ export default function SignupPage() {
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        {/* Google Signup Button */}
-        <button className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-100 transition">
+        {/* Google Button */}
+        <button
+          onClick={handleGoogleSignup}
+          className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-100"
+        >
           <img
             src="https://www.svgrepo.com/show/475656/google-color.svg"
-            alt="google"
             className="w-5 h-5"
           />
           Sign up with Google
         </button>
 
-        {/* Login Link */}
         <p className="text-center text-sm mt-6">
           Already have an account?{" "}
           <Link to="/login" className="text-blue-600 font-medium">
