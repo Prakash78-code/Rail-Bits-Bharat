@@ -7,7 +7,9 @@ import { AppProvider } from "@/store/AppContext";
 import { AuthProvider } from "@/store/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+
 import OrderTracking from "./pages/OrderTracking";
+import DemandForecast from "./pages/DemandForecast";
 
 import Homepage from "./pages/Homepage";
 import PassengerPortal from "./pages/PassengerPortal";
@@ -23,7 +25,6 @@ import OrderSummary from "./pages/OrderSummary";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
-// 🔥 ADD THIS
 import SetPinPage from "./pages/SetPinPage";
 
 const queryClient = new QueryClient();
@@ -41,35 +42,76 @@ const App = () => (
             <Navbar />
 
             <Routes>
-              {/* Public */}
+              {/* 🌐 Public Routes */}
               <Route path="/" element={<Homepage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
 
-              {/* 🔥 NEW ROUTE */}
+              {/* 🔑 Extra Public Route */}
               <Route path="/set-pin" element={<SetPinPage />} />
 
-              {/* 🔐 Protected */}
-              <Route path="/menu" element={
-                <ProtectedRoute><MenuPage /></ProtectedRoute>
-              } />
-              <Route path="/cart" element={
-                <ProtectedRoute><CartPage /></ProtectedRoute>
-              } />
-              <Route path="/checkout" element={
-                <ProtectedRoute><CheckoutPage /></ProtectedRoute>
-              } />
-              <Route path="/order-summary" element={
-                <ProtectedRoute><OrderSummary /></ProtectedRoute>
-              } />
-              <Route path="/tracking" element={
-                <ProtectedRoute><OrderTracking /></ProtectedRoute>
-              } /> 
+              {/* 🔐 Protected Routes */}
+              <Route
+                path="/menu"
+                element={
+                  <ProtectedRoute>
+                    <MenuPage />
+                  </ProtectedRoute>
+                }
+              />
 
+              <Route
+                path="/cart"
+                element={
+                  <ProtectedRoute>
+                    <CartPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <CheckoutPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/order-summary"
+                element={
+                  <ProtectedRoute>
+                    <OrderSummary />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/tracking"
+                element={
+                  <ProtectedRoute>
+                    <OrderTracking />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* 🌤️ AI FORECAST ROUTE (NEW ADDED) */}
+              <Route
+                path="/forecast"
+                element={
+                  <ProtectedRoute>
+                    <DemandForecast />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* 👤 Other dashboards */}
               <Route path="/passenger" element={<PassengerPortal />} />
               <Route path="/vendor" element={<VendorDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
 
+              {/* ❌ 404 */}
               <Route path="*" element={<NotFound />} />
             </Routes>
 

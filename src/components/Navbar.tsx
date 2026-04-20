@@ -1,5 +1,16 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Train, User, ChefHat, Shield, Home, Menu, ShoppingCart, LogOut, Moon, Sun,
+import {
+  Train,
+  User,
+  ChefHat,
+  Shield,
+  Home,
+  Menu,
+  ShoppingCart,
+  LogOut,
+  Moon,
+  Sun,
+  CloudSun,
 } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
 import { signOut } from "firebase/auth";
@@ -13,6 +24,7 @@ const navItems = [
   { to: "/passenger", icon: User },
   { to: "/vendor", icon: ChefHat },
   { to: "/admin", icon: Shield },
+  { to: "/forecast", icon: CloudSun }, // 🌤️ NEW ADDED LINK
 ];
 
 export function Navbar() {
@@ -22,7 +34,6 @@ export function Navbar() {
 
   const [dark, setDark] = useState(false);
 
-  // 🌙 Dark Mode toggle
   useEffect(() => {
     if (dark) {
       document.documentElement.classList.add("dark");
