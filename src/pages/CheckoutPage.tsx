@@ -29,22 +29,20 @@ export default function CheckoutPage() {
     else alert("Invalid coupon code");
   }
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
+
 
   async function handlePlaceOrder() {
-    if (!stateData?.vendor || items.length === 0) return;
+    if (items.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+    
+    // Default vendor if stateData is missing (e.g. page refresh)
+    const currentVendor = stateData?.vendor || { id: "v_fallback", name: "RailBite Kitchen", avgDeliveryTime: 30 };
+    
     setPlacing(true);
 
-    const isLoaded = await loadRazorpayScript();
-    if (!isLoaded) {
+    if (!(window as any).Razorpay) {
       alert("Razorpay SDK failed to load. Please check your connection.");
       setPlacing(false);
       return;
@@ -55,53 +53,62 @@ export default function CheckoutPage() {
 
     try {
       // 1. Create order on backend
-      const response = await fetch("http://localhost:4000/api/payments/create-order", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: total,
-          vendorId: stateData.vendor.id,
-          orderId: tempOrderId
         })
       });
-      const data = await response.json();
+      const orderData = await response.json();
 
-      if (!data.orderId) {
-        throw new Error(data.error || "Server failed to create order");
+      if (!orderData.id) {
+        throw new Error(orderData.error || "Server failed to create order");
       }
 
       // 2. Open Razorpay Checkout Modal
       const options = {
-        key: data.key,
-        amount: data.amount,
-        currency: data.currency,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_demokey", // Use test key from env or placeholder
+        amount: orderData.amount,
+        currency: orderData.currency,
         name: "RailBite Bharat",
-        description: `Food order from ${stateData.vendor.name}`,
-        order_id: data.orderId,
+        description: `Food order from ${currentVendor.name}`,
+        order_id: orderData.id,
         handler: async function (response: any) {
           try {
             // Verify payment signature via backend
-            const verifyRes = await fetch("http://localhost:4000/api/payments/verify", {
+            const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/verify-payment`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                internal_order_id: tempOrderId
               })
             });
             const verifyData = await verifyRes.json();
             
             if (verifyData.success) {
+              // Save order to backend
+              await fetch(`${import.meta.env.VITE_API_URL}/api/save-order`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  orderId: tempOrderId,
+                  vendorId: currentVendor.id,
+                  total: total,
+                  status: "paid"
+                })
+              });
+
               const order = placeOrder(
                 "2847501234",
                 pnrData.trainName,
                 pnrData.trainNumber,
-                stateData.stationName ?? "",
+                stateData?.stationName ?? "",
                 pnrData.coach,
                 pnrData.seat,
-                stateData.vendor!.id,
+                currentVendor.id,
                 items,
                 paymentMethod
               );

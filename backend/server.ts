@@ -3,14 +3,9 @@ import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
-import Razorpay from "razorpay";
-import crypto from "crypto";
 dotenv.config();
 
-const razorpay = new Razorpay({
-  key_id: process.env.VITE_RAZORPAY_KEY_ID || "rzp_test_demokey",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "demosecret12345",
-});
+import { createRazorpayOrder, verifyRazorpayPayment } from "./services/razorpay.service";
 
 const app = express();
 const server = http.createServer(app);
@@ -51,71 +46,42 @@ app.get("/api/pnr/:pnr", (req, res) => {
 });
 
 // Payment: Create Order
-app.post("/api/payments/create-order", async (req, res) => {
-  const { amount, vendorId, orderId } = req.body;
-  if (!amount || !vendorId || !orderId) return res.status(400).json({ error: "Missing fields" });
+app.post("/api/create-order", async (req, res) => {
+  const { amount } = req.body;
+  if (!amount) return res.status(400).json({ error: "Amount is required" });
 
   try {
-    const options = {
-      amount: Math.round(amount * 100), // convert to paise
-      currency: "INR",
-      receipt: orderId,
-    };
-    const rzpOrder = await razorpay.orders.create(options);
-    orders[orderId] = { status: "created", vendorId, total: amount, createdAt: Date.now() };
-    
-    res.json({ 
-      orderId: rzpOrder.id, 
-      amount: rzpOrder.amount, 
-      currency: rzpOrder.currency, 
-      key: process.env.VITE_RAZORPAY_KEY_ID || "rzp_test_demokey" 
-    });
+    const rzpOrder = await createRazorpayOrder(amount);
+    res.json(rzpOrder);
   } catch (error) {
-    console.error("Razorpay Error:", error);
     res.status(500).json({ error: "Payment creation failed" });
   }
 });
 
 // Payment: Verify Client Signature
-app.post("/api/payments/verify", (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, internal_order_id } = req.body;
-  const secret = process.env.RAZORPAY_KEY_SECRET || "demosecret12345";
+app.post("/api/verify-payment", (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
   
-  const generated_signature = crypto
-    .createHmac("sha256", secret)
-    .update(razorpay_order_id + "|" + razorpay_payment_id)
-    .digest("hex");
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ success: false, error: "Missing payment details" });
+  }
 
-  if (generated_signature === razorpay_signature) {
-    // Payment is successful and verified
-    if (orders[internal_order_id]) orders[internal_order_id].status = "paid";
+  const isValid = verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+
+  if (isValid) {
     res.json({ success: true, message: "Payment verified successfully" });
   } else {
     res.status(400).json({ success: false, error: "Invalid signature" });
   }
 });
 
-// Payment: Razorpay Webhook (Server-to-Server)
-app.post("/api/payments/webhook", (req, res) => {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET || "demowebhooksecret";
-  const signature = req.headers["x-razorpay-signature"] as string;
-
-  const generated_signature = crypto
-    .createHmac("sha256", secret)
-    .update(JSON.stringify(req.body))
-    .digest("hex");
-
-  if (generated_signature === signature) {
-    const event = req.body.event;
-    if (event === "payment.captured") {
-      const paymentEntity = req.body.payload.payment.entity;
-      console.log(`Payment captured: ${paymentEntity.id} for order ${paymentEntity.order_id}`);
-      // In a real DB, look up internal order by razorpay_order_id and mark as paid.
-    }
-    res.status(200).json({ status: "ok" });
-  } else {
-    res.status(400).json({ status: "invalid signature" });
-  }
+// Order: Save to store
+app.post("/api/save-order", (req, res) => {
+  const { orderId, vendorId, total, status } = req.body;
+  if (!orderId || !vendorId) return res.status(400).json({ error: "Order ID and Vendor ID are required" });
+  
+  orders[orderId] = { status: status || "paid", vendorId, total, createdAt: Date.now() };
+  res.json({ success: true });
 });
 
 // Payment: Refund
