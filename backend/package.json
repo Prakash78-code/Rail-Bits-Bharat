@@ -1,7 +1,6 @@
 {
   "name": "railbite-backend",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "dev": "tsx watch server.ts",
     "build": "tsc",
