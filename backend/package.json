@@ -12,12 +12,12 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "razorpay": "^2.9.6",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.25",
+    "@types/node": "^22.19.17",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0"
   }
