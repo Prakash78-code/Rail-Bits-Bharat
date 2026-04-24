@@ -1,58 +1,76 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { Lock, CheckCircle2 } from "lucide-react";
 
 export default function SetPinPage() {
-  const [pin, setPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
   const navigate = useNavigate();
+  const [pin, setPin] = useState(["", "", "", ""]);
+  const [confirm, setConfirm] = useState(["", "", "", ""]);
+  const [step, setStep] = useState<"set" | "confirm">("set");
+  const [error, setError] = useState("");
 
-  const handleSave = () => {
-    if (pin.length !== 4) {
-      toast.error("Enter 4 digit PIN ❌");
-      return;
-    }
+  function handlePinInput(arr: string[], setArr: (v: string[]) => void, idx: number, val: string) {
+    const newArr = [...arr];
+    newArr[idx] = val.slice(-1);
+    setArr(newArr);
+    if (val && idx < 3) document.getElementById(`${step}-pin-${idx + 1}`)?.focus();
+  }
 
-    if (pin !== confirmPin) {
-      toast.error("PIN mismatch ❌");
-      return;
-    }
+  function handleNext() {
+    if (pin.some(d => !d)) { setError("Enter all 4 digits"); return; }
+    setError("");
+    setStep("confirm");
+  }
 
-    localStorage.setItem("userPIN", pin);
+  function handleConfirm() {
+    if (confirm.join("") !== pin.join("")) { setError("PINs don't match, try again"); setConfirm(["","","",""]); return; }
+    navigate("/passenger");
+  }
 
-    toast.success("PIN Saved 🔐");
-    navigate("/menu");
-  };
+  const currentArr = step === "set" ? pin : confirm;
+  const setCurrentArr = step === "set" ? setPin : setConfirm;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-6 rounded-xl shadow w-80">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-background to-muted">
+      <div className="w-full max-w-sm">
+        <div className="bg-card rounded-2xl border border-border p-8 shadow-xl text-center">
+          <div className="w-14 h-14 rounded-2xl gradient-saffron flex items-center justify-center mx-auto mb-5 shadow-lg">
+            <Lock className="h-7 w-7 text-white" />
+          </div>
+          <h1 className="font-display text-xl font-bold mb-1">{step === "set" ? "Set Your Quick PIN" : "Confirm PIN"}</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            {step === "set" ? "Choose a 4-digit PIN for quick login" : "Re-enter your PIN to confirm"}
+          </p>
 
-        <h2 className="text-lg font-semibold mb-4 text-center">
-          Set Your PIN 🔐
-        </h2>
+          <div className="flex gap-3 justify-center mb-4">
+            {currentArr.map((d, i) => (
+              <input
+                key={i}
+                id={`${step}-pin-${i}`}
+                type="password"
+                inputMode="numeric"
+                maxLength={1}
+                value={d}
+                onChange={e => handlePinInput(currentArr, setCurrentArr, i, e.target.value)}
+                onKeyDown={e => e.key === "Backspace" && !d && i > 0 && document.getElementById(`${step}-pin-${i - 1}`)?.focus()}
+                className="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-input focus:border-accent bg-background focus:outline-none transition-colors"
+              />
+            ))}
+          </div>
 
-        <input
-          type="password"
-          placeholder="Enter PIN"
-          className="border w-full p-2 mb-2 rounded"
-          onChange={(e) => setPin(e.target.value)}
-        />
+          {error && <p className="text-destructive text-sm mb-3">{error}</p>}
 
-        <input
-          type="password"
-          placeholder="Confirm PIN"
-          className="border w-full p-2 mb-4 rounded"
-          onChange={(e) => setConfirmPin(e.target.value)}
-        />
+          <button
+            onClick={step === "set" ? handleNext : handleConfirm}
+            className="btn-primary w-full py-3"
+          >
+            {step === "set" ? "Continue" : <span className="flex items-center gap-2 justify-center"><CheckCircle2 className="h-5 w-5" />Set PIN & Continue</span>}
+          </button>
 
-        <button
-          onClick={handleSave}
-          className="bg-green-600 text-white w-full py-2 rounded"
-        >
-          Save PIN
-        </button>
-
+          <button onClick={() => navigate("/passenger")} className="btn-ghost w-full mt-3 text-sm text-muted-foreground">
+            Skip for now
+          </button>
+        </div>
       </div>
     </div>
   );

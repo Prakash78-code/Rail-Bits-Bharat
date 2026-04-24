@@ -1,50 +1,58 @@
 import { create } from "zustand";
-import { MenuItem } from "../data/mockData";
+import { persist } from "zustand/middleware";
+import { MenuItem } from "@/data/mockData";
 
-type CartItem = {
+interface CartItem {
   item: MenuItem;
   qty: number;
-};
+  vendorId: string;
+}
 
-type CartState = {
-  cart: CartItem[];
-  addToCart: (item: MenuItem) => void;
-  removeFromCart: (id: string) => void;
-
-  // 🆕 ADD THIS
+interface CartStore {
+  items: CartItem[];
+  vendorId: string | null;
+  stationName: string;
+  addItem: (item: MenuItem, vendorId: string) => void;
+  removeItem: (itemId: string) => void;
+  updateQty: (itemId: string, qty: number) => void;
   clearCart: () => void;
-};
+  setStation: (name: string) => void;
+  getTotal: () => number;
+}
 
-export const useCartStore = create<CartState>((set) => ({
-  cart: [],
-
-  addToCart: (item) =>
-    set((state) => {
-      const existing = state.cart.find((c) => c.item.id === item.id);
-
-      if (existing) {
-        return {
-          cart: state.cart.map((c) =>
-            c.item.id === item.id
-              ? { ...c, qty: c.qty + 1 }
-              : c
-          ),
-        };
-      }
-
-      return {
-        cart: [...state.cart, { item, qty: 1 }],
-      };
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      vendorId: null,
+      stationName: "",
+      addItem: (item, vendorId) =>
+        set(state => {
+          if (state.vendorId && state.vendorId !== vendorId) {
+            // New vendor — clear cart first
+            return { items: [{ item, qty: 1, vendorId }], vendorId };
+          }
+          const existing = state.items.find(i => i.item.id === item.id);
+          if (existing) {
+            return { items: state.items.map(i => i.item.id === item.id ? { ...i, qty: i.qty + 1 } : i) };
+          }
+          return { items: [...state.items, { item, qty: 1, vendorId }], vendorId };
+        }),
+      removeItem: itemId =>
+        set(state => {
+          const filtered = state.items.filter(i => i.item.id !== itemId);
+          return { items: filtered, vendorId: filtered.length === 0 ? null : state.vendorId };
+        }),
+      updateQty: (itemId, qty) =>
+        set(state => ({
+          items: qty <= 0
+            ? state.items.filter(i => i.item.id !== itemId)
+            : state.items.map(i => i.item.id === itemId ? { ...i, qty } : i),
+        })),
+      clearCart: () => set({ items: [], vendorId: null, stationName: "" }),
+      setStation: name => set({ stationName: name }),
+      getTotal: () => get().items.reduce((s, i) => s + i.item.price * i.qty, 0),
     }),
-
-  removeFromCart: (id) =>
-    set((state) => ({
-      cart: state.cart.filter((c) => c.item.id !== id),
-    })),
-
-  // 🆕 FIXED: clearCart
-  clearCart: () =>
-    set(() => ({
-      cart: [],
-    })),
-}));
+    { name: "railbite-cart" }
+  )
+);

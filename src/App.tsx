@@ -5,123 +5,69 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/store/AppContext";
 import { AuthProvider } from "@/store/AuthContext";
+import { ThemeProvider } from "next-themes";
 import { Navbar } from "@/components/Navbar";
-import ProtectedRoute from "./components/ProtectedRoute";
-
-import OrderTracking from "./pages/OrderTracking";
-import DemandForecast from "./pages/DemandForecast";
-import VendorRegister from "./pages/VendorRegister";
 
 import Homepage from "./pages/Homepage";
 import PassengerPortal from "./pages/PassengerPortal";
 import VendorDashboard from "./pages/VendorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
-
 import MenuPage from "./pages/MenuPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSummary from "./pages/OrderSummary";
-
+import OrderTracking from "./pages/OrderTracking";
+import DemandForecast from "./pages/DemandForecast";
+import VendorRegister from "./pages/VendorRegister";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-
-import SetPinPage from "./pages/SetPinPage";
+import SHGPortal from "./pages/SHGPortal";
+import RateOrderPage from "./pages/RateOrderPage";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AppProvider>
-        <AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <TooltipProvider>
+        <AppProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Navbar />
+              <Routes>
+                {/* Public */}
+                <Route path="/" element={<Homepage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/shg" element={<SHGPortal />} />
+                <Route path="/vendor-register" element={<VendorRegister />} />
 
-          <Toaster />
-          <Sonner />
+                {/* Passenger */}
+                <Route path="/passenger" element={<PassengerPortal />} />
+                <Route path="/menu" element={<MenuPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/order-summary" element={<OrderSummary />} />
+                <Route path="/tracking" element={<OrderTracking />} />
+                <Route path="/rate" element={<RateOrderPage />} />
 
-          <BrowserRouter>
-            <Navbar />
+                {/* Vendor */}
+                <Route path="/vendor" element={<VendorDashboard />} />
 
-            <Routes>
-              {/* 🌐 Public Routes */}
-              <Route path="/" element={<Homepage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
+                {/* Admin */}
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/forecast" element={<DemandForecast />} />
 
-              {/* 🔑 Extra Public Route */}
-              <Route path="/set-pin" element={<SetPinPage />} />
-              <Route path="/vendor-register" element={<VendorRegister />} />
-
-              {/* 🔐 Protected Routes */}
-              <Route
-                path="/menu"
-                element={
-                  <ProtectedRoute>
-                    <MenuPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/cart"
-                element={
-                  <ProtectedRoute>
-                    <CartPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <CheckoutPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/order-summary"
-                element={
-                  <ProtectedRoute>
-                    <OrderSummary />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/tracking"
-                element={
-                  <ProtectedRoute>
-                    <OrderTracking />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* 🌤️ AI FORECAST ROUTE (NEW ADDED) */}
-              <Route
-                path="/forecast"
-                element={
-                  <ProtectedRoute>
-                    <DemandForecast />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* 👤 Other dashboards */}
-              <Route path="/passenger" element={<PassengerPortal />} />
-              <Route path="/vendor" element={<VendorDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-
-              {/* ❌ 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-
-          </BrowserRouter>
-
-        </AuthProvider>
-      </AppProvider>
-    </TooltipProvider>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </AppProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
