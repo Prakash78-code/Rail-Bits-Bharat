@@ -1,480 +1,313 @@
+import { useState } from "react";
 import { useApp } from "@/store/AppContext";
-import { AnimatedCounter } from "@/components/AnimatedCounter";
-import { StarRating } from "@/components/StarRating";
-import { FssaiBadge } from "@/components/FssaiBadge";
-import { HygieneScore } from "@/components/HygieneScore";
 import {
-  Shield, Package, IndianRupee, AlertTriangle, Users,
-  BarChart3, PieChart, ShieldCheck, ShieldAlert, TrendingUp,
-  MapPin, Ban, CheckCircle2,
+  BarChart3, Users, ShoppingBag, TrendingUp, AlertTriangle,
+  CheckCircle, XCircle, Clock, Star, Package, DollarSign,
+  Download, Search, Filter, Eye, Gavel, Bell
 } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell,
-  PieChart as RPieChart, Pie,
-  LineChart, Line, Legend,
+  BarChart, Bar, LineChart, Line, XAxis, YAxis,
+  Tooltip, ResponsiveContainer, CartesianGrid
 } from "recharts";
 
+const revenueData = [
+  { day: "Mon", revenue: 12400, orders: 48 },
+  { day: "Tue", revenue: 18200, orders: 71 },
+  { day: "Wed", revenue: 15800, orders: 62 },
+  { day: "Thu", revenue: 22100, orders: 86 },
+  { day: "Fri", revenue: 28900, orders: 112 },
+  { day: "Sat", revenue: 35400, orders: 138 },
+  { day: "Sun", revenue: 31200, orders: 121 },
+];
+
+const stationData = [
+  { station: "Howrah Jn.", orders: 138 },
+  { station: "Mumbai Cen.", orders: 112 },
+  { station: "Chennai Cen.", orders: 96 },
+  { station: "Varanasi Jn.", orders: 84 },
+  { station: "Lucknow", orders: 72 },
+];
+
+type Tab = "overview" | "orders" | "vendors" | "complaints" | "users";
+
 export default function AdminDashboard() {
-  const { state, getTotalRevenue } = useApp();
-  const revenue = getTotalRevenue();
+  const { state, flagVendor } = useApp();
+  const [tab, setTab] = useState<Tab>("overview");
+  const [searchQ, setSearchQ] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
 
-  const flaggedVendors = state.vendors.filter((v) => v.flagged);
-  const verifiedVendors = state.vendors.filter((v) => v.fssaiVerified);
-  const unverifiedVendors = state.vendors.filter((v) => !v.fssaiVerified);
-  const totalJobs = state.jobs.vendors + state.jobs.delivery + state.jobs.kitchen + state.jobs.hygiene;
+  const totalRevenue = state.orders.reduce((s, o) => s + o.total, 0);
+  const activeVendors = state.vendors.filter(v => v.approved && !v.flagged).length;
+  const openComplaints = state.complaints.filter(c => c.status === "open").length;
 
-  // ── Chart Data ────────────────────────────────────────────────────────────
+  const filteredOrders = state.orders.filter(o => {
+    if (filterStatus !== "all" && o.status !== filterStatus) return false;
+    if (searchQ && !o.id.toLowerCase().includes(searchQ.toLowerCase())) return false;
+    return true;
+  });
 
-  const revenuePieData = [
-    { name: "Vendor (90%)",   value: revenue.vendor,   color: "hsl(152, 60%, 42%)" },
-    { name: "Platform (7%)",  value: revenue.platform, color: "hsl(24, 95%, 53%)" },
-    { name: "IRCTC (3%)",     value: revenue.irctc,    color: "hsl(222, 60%, 18%)" },
-  ];
-
-  const complaintData = state.vendors
-    .filter((v) => v.complaintCount > 0)
-    .sort((a, b) => b.complaintCount - a.complaintCount)
-    .slice(0, 8)
-    .map((v) => ({
-      name: v.name.split(" ")[0],
-      complaints: v.complaintCount,
-      flagged: v.flagged,
-    }));
-
-  // Hygiene Score chart — all vendors
-  const hygieneChartData = state.vendors.map((v) => ({
-    name: v.name.split(" ")[0],
-    score: v.hygieneScore,
-    fill:
-      v.hygieneScore >= 85 ? "#22c55e"
-      : v.hygieneScore >= 65 ? "#facc15"
-      : v.hygieneScore >= 45 ? "#fb923c"
-      : "#ef4444",
-  }));
-
-  // Station-wise order heatmap data
-  const stationOrderData = ["Lucknow", "Kanpur", "Allahabad", "Varanasi", "Patna", "Delhi"].map(
-    (station) => ({
-      station,
-      orders: state.orders.filter((o) => o.station === station).length,
-      complaints: state.complaints.filter((c) => {
-        const order = state.orders.find((o) => o.id === c.orderId);
-        return order?.station === station;
-      }).length,
-    })
-  );
-
-  // Revenue trend (mock daily data for demo)
-  const revenueTrendData = [
-    { day: "Mon", revenue: 1200, orders: 8 },
-    { day: "Tue", revenue: 1800, orders: 12 },
-    { day: "Wed", revenue: 1500, orders: 10 },
-    { day: "Thu", revenue: 2200, orders: 15 },
-    { day: "Fri", revenue: 2800, orders: 19 },
-    { day: "Sat", revenue: 3200, orders: 22 },
-    { day: "Sun", revenue: revenue.total > 0 ? revenue.total : 2600, orders: state.orders.length > 0 ? state.orders.length : 18 },
+  const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: "overview", label: "Overview", icon: <BarChart3 className="h-4 w-4" /> },
+    { id: "orders", label: "Orders", icon: <ShoppingBag className="h-4 w-4" /> },
+    { id: "vendors", label: "Vendors", icon: <Package className="h-4 w-4" /> },
+    { id: "complaints", label: "Complaints", icon: <AlertTriangle className="h-4 w-4" /> },
+    { id: "users", label: "Users", icon: <Users className="h-4 w-4" /> },
   ];
 
   return (
-    <div className="min-h-screen py-8 px-4 bg-background">
-      <div className="container mx-auto max-w-7xl">
-
-        {/* ── Header ──────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 mb-8">
-          <Shield className="h-8 w-8 text-accent" />
+    <div className="min-h-screen pt-16 bg-background">
+      <div className="container mx-auto max-w-7xl px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="font-display text-2xl font-bold">
-              Government & Admin Dashboard
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Real-time compliance, revenue & operations — RailBite Bharat
-            </p>
+            <h1 className="font-display text-2xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground text-sm">RailBite Bharat Operations Centre</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Live
+            </div>
+            <button className="btn-ghost relative">
+              <Bell className="h-5 w-5" />
+              {openComplaints > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 gradient-saffron rounded-full text-white text-[10px] font-bold flex items-center justify-center">{openComplaints}</span>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* ── Top Stats ───────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
-          {[
-            { label: "Total Orders",      value: state.orders.length,      icon: Package,       color: "text-accent" },
-            { label: "Total Revenue",     value: revenue.total,            icon: IndianRupee,   color: "text-emerald", prefix: "₹" },
-            { label: "IRCTC Share (3%)",  value: revenue.irctc,            icon: TrendingUp,    color: "text-blue-500", prefix: "₹" },
-            { label: "Complaints",        value: state.complaints.length,  icon: AlertTriangle, color: "text-destructive" },
-            { label: "Flagged Vendors",   value: flaggedVendors.length,    icon: Ban,           color: "text-orange-500" },
-            { label: "FSSAI Verified",    value: verifiedVendors.length,   icon: ShieldCheck,   color: "text-green-500" },
-            { label: "Jobs Generated",    value: totalJobs + state.orders.length, icon: Users,  color: "text-purple-500" },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-card rounded-xl p-4 border border-border animate-fade-in"
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${tab === t.id ? "gradient-saffron text-white shadow-md" : "bg-card border border-border hover:bg-muted"}`}
             >
-              <stat.icon className={`h-5 w-5 ${stat.color} mb-2`} />
-              <div className="text-2xl font-display font-bold">
-                <AnimatedCounter end={stat.value} prefix={stat.prefix || ""} />
-              </div>
-              <div className="text-xs text-muted-foreground">{stat.label}</div>
-            </div>
+              {t.icon}{t.label}
+            </button>
           ))}
         </div>
 
-        {/* ── FSSAI Compliance Summary ─────────────────────────────────────── */}
-        <div className="bg-card rounded-2xl p-6 border border-border mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ShieldCheck className="h-5 w-5 text-green-500" />
-            <h2 className="font-display text-lg font-bold">FSSAI Compliance Overview</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
-              <ShieldCheck className="h-6 w-6 text-green-600 mx-auto mb-1" />
-              <div className="text-2xl font-bold text-green-700 dark:text-green-400">
-                {verifiedVendors.length}
-              </div>
-              <div className="text-xs text-green-600 dark:text-green-500">Verified Vendors</div>
-            </div>
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
-              <ShieldAlert className="h-6 w-6 text-yellow-600 mx-auto mb-1" />
-              <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
-                {unverifiedVendors.length}
-              </div>
-              <div className="text-xs text-yellow-600 dark:text-yellow-500">Pending Verification</div>
-            </div>
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
-              <Ban className="h-6 w-6 text-red-600 mx-auto mb-1" />
-              <div className="text-2xl font-bold text-red-700 dark:text-red-400">
-                {flaggedVendors.length}
-              </div>
-              <div className="text-xs text-red-600 dark:text-red-500">Flagged / Blacklisted</div>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-center">
-              <CheckCircle2 className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-              <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-                {Math.round((verifiedVendors.length / Math.max(state.vendors.length, 1)) * 100)}%
-              </div>
-              <div className="text-xs text-blue-600 dark:text-blue-500">Compliance Rate</div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Charts Row 1 ────────────────────────────────────────────────── */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-
-          {/* Revenue Split Pie */}
-          <div className="bg-card rounded-2xl p-6 border border-border">
-            <div className="flex items-center gap-2 mb-4">
-              <PieChart className="h-5 w-5 text-accent" />
-              <h2 className="font-display text-lg font-bold">Revenue Split</h2>
-            </div>
-            {revenue.total > 0 ? (
-              <>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RPieChart>
-                      <Pie
-                        data={revenuePieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        label={(entry) => entry.name}
-                      >
-                        {revenuePieData.map((entry, idx) => (
-                          <Cell key={idx} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => `₹${value}`} />
-                    </RPieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-2 mt-2">
-                  {revenuePieData.map((item) => (
-                    <div key={item.name} className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <span
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        {item.name}
-                      </span>
-                      <span className="font-semibold">₹{item.value}</span>
+        {/* OVERVIEW TAB */}
+        {tab === "overview" && (
+          <div className="space-y-6 animate-fade-in">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { icon: ShoppingBag, label: "Orders Today", value: state.orders.length || 48, color: "text-accent", bg: "bg-accent/10", delta: "+12%" },
+                { icon: DollarSign, label: "Revenue Today", value: `₹${(totalRevenue || 28900).toLocaleString()}`, color: "text-green-500", bg: "bg-green-500/10", delta: "+8%" },
+                { icon: Package, label: "Active Vendors", value: activeVendors, color: "text-blue-500", bg: "bg-blue-500/10", delta: "+2" },
+                { icon: AlertTriangle, label: "Open Complaints", value: openComplaints || 3, color: "text-amber-500", bg: "bg-amber-500/10", delta: openComplaints > 5 ? "↑ High" : "Normal" },
+              ].map(k => (
+                <div key={k.label} className="bg-card rounded-2xl p-5 border border-border card-hover">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center`}>
+                      <k.icon className={`h-5 w-5 ${k.color}`} />
                     </div>
-                  ))}
+                    <span className="text-xs text-green-500 font-medium">{k.delta}</span>
+                  </div>
+                  <div className="font-display text-2xl font-bold">{k.value}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{k.label}</div>
                 </div>
-              </>
-            ) : (
-              <p className="text-muted-foreground text-sm py-12 text-center">
-                No orders yet. Revenue data will appear here.
-              </p>
-            )}
-          </div>
-
-          {/* Complaint Bar Chart */}
-          <div className="bg-card rounded-2xl p-6 border border-border">
-            <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="h-5 w-5 text-destructive" />
-              <h2 className="font-display text-lg font-bold">Complaint Heatmap</h2>
+              ))}
             </div>
-            {complaintData.length > 0 ? (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={complaintData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Bar dataKey="complaints" radius={[6, 6, 0, 0]}>
-                      {complaintData.map((entry, idx) => (
-                        <Cell
-                          key={idx}
-                          fill={entry.flagged ? "#ef4444" : "#fb923c"}
-                        />
-                      ))}
-                    </Bar>
+
+            {/* Charts */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              <div className="bg-card rounded-2xl p-5 border border-border">
+                <h3 className="font-semibold mb-4">Revenue (Last 7 Days)</h3>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, "Revenue"]} />
+                    <Bar dataKey="revenue" fill="hsl(24 95% 53%)" radius={[6,6,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            ) : (
-              <p className="text-muted-foreground text-sm py-12 text-center">
-                No complaints recorded yet.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* ── Charts Row 2 ────────────────────────────────────────────────── */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-
-          {/* Hygiene Score Chart */}
-          <div className="bg-card rounded-2xl p-6 border border-border">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="h-5 w-5 text-green-500" />
-              <h2 className="font-display text-lg font-bold">Hygiene Scores — All Vendors</h2>
+              <div className="bg-card rounded-2xl p-5 border border-border">
+                <h3 className="font-semibold mb-4">Orders by Station</h3>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={stationData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" tick={{ fontSize: 12 }} />
+                    <YAxis dataKey="station" type="category" tick={{ fontSize: 11 }} width={90} />
+                    <Tooltip />
+                    <Bar dataKey="orders" fill="hsl(222 60% 40%)" radius={[0,6,6,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={hygieneChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(value: number) => `${value}/100`} />
-                  <Bar dataKey="score" radius={[6, 6, 0, 0]}>
-                    {hygieneChartData.map((entry, idx) => (
-                      <Cell key={idx} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            {/* Legend */}
-            <div className="flex flex-wrap gap-3 mt-3 text-xs">
-              {[
-                { color: "#22c55e", label: "Excellent (85+)" },
-                { color: "#facc15", label: "Good (65-84)" },
-                { color: "#fb923c", label: "Average (45-64)" },
-                { color: "#ef4444", label: "Poor (<45)" },
-              ].map((l) => (
-                <span key={l.label} className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: l.color }} />
-                  {l.label}
-                </span>
+
+            {/* Recent Orders Feed */}
+            <div className="bg-card rounded-2xl p-5 border border-border">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                Live Order Feed <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              </h3>
+              {state.orders.slice(0, 5).map(o => (
+                <div key={o.id} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${o.status === "delivered" ? "bg-green-500" : o.status === "preparing" ? "bg-amber-500" : "bg-blue-500"}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono text-sm font-medium">{o.id}</div>
+                    <div className="text-xs text-muted-foreground">{o.station} • ₹{o.total}</div>
+                  </div>
+                  <span className={`px-2 py-0.5 text-xs rounded-full font-medium status-${o.status}`}>{o.status.replace(/_/g," ")}</span>
+                </div>
               ))}
+              {state.orders.length === 0 && (
+                <p className="text-muted-foreground text-sm text-center py-6">No orders yet — place a test order from Passenger Portal</p>
+              )}
             </div>
           </div>
+        )}
 
-          {/* Station-wise Order + Complaint Heatmap */}
-          <div className="bg-card rounded-2xl p-6 border border-border">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="h-5 w-5 text-blue-500" />
-              <h2 className="font-display text-lg font-bold">Station-wise Activity</h2>
+        {/* ORDERS TAB */}
+        {tab === "orders" && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex flex-wrap gap-3">
+              <div className="relative flex-1 min-w-48">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Search order ID…" className="input-base pl-9 py-2 text-sm" />
+              </div>
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input-base py-2 text-sm w-auto">
+                <option value="all">All Status</option>
+                <option value="placed">Placed</option>
+                <option value="preparing">Preparing</option>
+                <option value="out_for_delivery">Out for Delivery</option>
+                <option value="delivered">Delivered</option>
+              </select>
+              <button className="btn-secondary flex items-center gap-2 px-4 py-2 text-sm">
+                <Download className="h-4 w-4" /> Export CSV
+              </button>
             </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stationOrderData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="station" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="orders" name="Orders" fill="hsl(24, 95%, 53%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="complaints" name="Complaints" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Revenue Trend Line Chart */}
-        <div className="bg-card rounded-2xl p-6 border border-border mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-5 w-5 text-accent" />
-            <h2 className="font-display text-lg font-bold">Revenue Trend (This Week)</h2>
-          </div>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueTrendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value: number, name: string) => [name === "revenue" ? `₹${value}` : value, name]} />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" name="Revenue (₹)" stroke="hsl(24, 95%, 53%)" strokeWidth={2} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="orders" name="Orders" stroke="hsl(152, 60%, 42%)" strokeWidth={2} dot={{ r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* ── All Vendors Table ────────────────────────────────────────────── */}
-        <div className="bg-card rounded-2xl p-6 border border-border mb-6">
-          <h2 className="font-display text-lg font-bold mb-4">
-            All Vendors — Full Compliance View
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="pb-3 text-muted-foreground font-medium">Vendor</th>
-                  <th className="pb-3 text-muted-foreground font-medium">Station</th>
-                  <th className="pb-3 text-muted-foreground font-medium">FSSAI</th>
-                  <th className="pb-3 text-muted-foreground font-medium">Hygiene</th>
-                  <th className="pb-3 text-muted-foreground font-medium">Rating</th>
-                  <th className="pb-3 text-muted-foreground font-medium">Complaints</th>
-                  <th className="pb-3 text-muted-foreground font-medium">Earnings</th>
-                  <th className="pb-3 text-muted-foreground font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {state.vendors.map((v) => (
-                  <tr key={v.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="py-3 font-medium">{v.name}</td>
-                    <td className="py-3 text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {v.station}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <FssaiBadge
-                        fssaiNumber={v.fssaiNumber}
-                        verified={v.fssaiVerified}
-                      />
-                    </td>
-                    <td className="py-3 min-w-[140px]">
-                      <HygieneScore score={v.hygieneScore} />
-                    </td>
-                    <td className="py-3">
-                      <StarRating rating={v.hygieneRating} size={12} />
-                    </td>
-                    <td className="py-3">
-                      <span className={v.complaintCount >= 3 ? "text-destructive font-bold" : ""}>
-                        {v.complaintCount}
-                      </span>
-                    </td>
-                    <td className="py-3 font-medium">₹{v.earnings}</td>
-                    <td className="py-3">
-                      {v.flagged ? (
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-destructive text-destructive-foreground font-bold flex items-center gap-1 w-fit">
-                          <Ban className="h-3 w-3" /> Blacklisted
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-emerald/10 text-emerald font-medium flex items-center gap-1 w-fit">
-                          <CheckCircle2 className="h-3 w-3" /> Active
-                        </span>
-                      )}
-                    </td>
+            <div className="bg-card rounded-2xl border border-border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="text-left p-3 font-semibold">Order ID</th>
+                    <th className="text-left p-3 font-semibold hidden md:table-cell">Station</th>
+                    <th className="text-left p-3 font-semibold hidden sm:table-cell">Amount</th>
+                    <th className="text-left p-3 font-semibold">Status</th>
+                    <th className="text-left p-3 font-semibold hidden lg:table-cell">Payment</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* ── Blacklisted Vendors Alert ────────────────────────────────────── */}
-        {flaggedVendors.length > 0 && (
-          <div className="bg-card rounded-2xl p-6 border border-destructive/30 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Ban className="h-5 w-5 text-destructive" />
-              <h2 className="font-display text-lg font-bold text-destructive">
-                Blacklisted Vendors ({flaggedVendors.length})
-              </h2>
+                </thead>
+                <tbody>
+                  {filteredOrders.map(o => (
+                    <tr key={o.id} className="border-t border-border hover:bg-muted/30 transition-colors">
+                      <td className="p-3 font-mono text-xs">{o.id}</td>
+                      <td className="p-3 hidden md:table-cell text-muted-foreground">{o.station}</td>
+                      <td className="p-3 hidden sm:table-cell font-semibold">₹{o.total}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium status-${o.status}`}>{o.status.replace(/_/g," ")}</span>
+                      </td>
+                      <td className="p-3 hidden lg:table-cell text-muted-foreground">{o.paymentMethod}</td>
+                    </tr>
+                  ))}
+                  {filteredOrders.length === 0 && (
+                    <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No orders found</td></tr>
+                  )}
+                </tbody>
+              </table>
             </div>
+          </div>
+        )}
+
+        {/* VENDORS TAB */}
+        {tab === "vendors" && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-display font-semibold">Vendor Management</h2>
             <div className="space-y-3">
-              {flaggedVendors.map((v) => (
-                <div
-                  key={v.id}
-                  className="flex items-center justify-between p-4 bg-destructive/5 border border-destructive/20 rounded-xl"
-                >
-                  <div>
-                    <p className="font-semibold">{v.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      📍 {v.station} · {v.complaintCount} complaints
-                    </p>
-                    <div className="mt-1">
-                      <FssaiBadge fssaiNumber={v.fssaiNumber} verified={v.fssaiVerified} />
+              {state.vendors.map(v => (
+                <div key={v.id} className="bg-card rounded-2xl p-5 border border-border">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold">{v.name}</h3>
+                        {v.isSHG && <span className="badge-shg">SHG</span>}
+                        {v.flagged && <span className="px-2 py-0.5 text-xs rounded-full bg-destructive/15 text-destructive font-bold">⚠ Flagged</span>}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{v.station} • FSSAI: {v.fssaiNumber}</p>
                     </div>
+                    <button
+                      onClick={() => flagVendor(v.id)}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${v.flagged ? "bg-green-500/10 text-green-600 hover:bg-green-500/20" : "bg-destructive/10 text-destructive hover:bg-destructive/20"}`}
+                    >
+                      <Gavel className="h-3 w-3" />
+                      {v.flagged ? "Unflag" : "Flag"}
+                    </button>
                   </div>
-                  <div className="text-right">
-                    <HygieneScore score={v.hygieneScore} />
-                    <p className="text-xs text-destructive font-semibold mt-1">
-                      ⚠ Action Required
-                    </p>
+                  <div className="flex flex-wrap gap-3 text-sm">
+                    <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-amber-400 text-amber-400" />{v.hygieneRating} rating</span>
+                    <span className="text-muted-foreground">{v.complaintCount} complaints</span>
+                    <span className="text-muted-foreground">{v.totalOrders} orders</span>
+                    <span className={v.fssaiVerified ? "text-green-600 dark:text-green-400" : "text-amber-600"}>{v.fssaiVerified ? "✓ FSSAI Verified" : "⚠ Unverified"}</span>
                   </div>
+                  <div className="mt-3 w-full bg-muted rounded-full h-1.5">
+                    <div className="h-1.5 rounded-full gradient-saffron" style={{ width: `${v.hygieneScore}%` }} />
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Hygiene Score: {v.hygieneScore}/100</div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* ── Recent Orders ────────────────────────────────────────────────── */}
-        <div className="bg-card rounded-2xl p-6 border border-border">
-          <h2 className="font-display text-lg font-bold mb-4">
-            Recent Orders (Live)
-          </h2>
-          {state.orders.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">
-              No orders yet. Place an order from Passenger Portal to see data here.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {state.orders
-                .slice()
-                .reverse()
-                .slice(0, 10)
-                .map((o) => (
-                  <div
-                    key={o.id}
-                    className="flex items-center justify-between py-3 px-4 rounded-lg bg-background border border-border"
-                  >
-                    <div>
-                      <span className="font-medium text-sm">#{o.id}</span>
-                      <span className="text-muted-foreground text-xs ml-2">
-                        📍 {o.station}
+        {/* COMPLAINTS TAB */}
+        {tab === "complaints" && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-display font-semibold">Complaint Tickets ({state.complaints.length})</h2>
+            {state.complaints.length === 0 ? (
+              <div className="bg-card rounded-2xl p-12 border border-border text-center">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                <p className="text-muted-foreground">No complaints filed yet.</p>
+              </div>
+            ) : (
+              state.complaints.map(c => (
+                <div key={c.id} className="bg-card rounded-2xl p-5 border border-border">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="font-mono text-sm font-semibold">{c.id}</div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${c.priority === "high" ? "bg-destructive/15 text-destructive" : c.priority === "medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"}`}>
+                        {c.priority}
                       </span>
-                      <span className="text-muted-foreground text-xs ml-2">
-                        PNR: {o.pnr}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {/* Revenue split mini */}
-                      <span className="text-xs text-muted-foreground hidden md:block">
-                        IRCTC: ₹{o.revenueSplit.irctc}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          o.status === "delivered"
-                            ? "bg-emerald/10 text-emerald"
-                            : "bg-accent/10 text-accent"
-                        }`}
-                      >
-                        {o.status.replace(/_/g, " ")}
-                      </span>
-                      <span className="font-bold text-sm">₹{o.total}</span>
+                      <span className="status-placed px-2 py-0.5 text-xs rounded-full">{c.status}</span>
                     </div>
                   </div>
-                ))}
-            </div>
-          )}
-        </div>
+                  <p className="text-sm text-muted-foreground mb-2">Order: {c.orderId}</p>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {c.reasons.map(r => <span key={r} className="px-2 py-0.5 bg-muted rounded-full text-xs">{r}</span>)}
+                  </div>
+                  {c.text && <p className="text-sm text-muted-foreground">{c.text}</p>}
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
+        {/* USERS TAB */}
+        {tab === "users" && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="bg-card rounded-2xl p-8 border border-border text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <h3 className="font-display font-semibold mb-2">User Management</h3>
+              <p className="text-muted-foreground text-sm">Firebase Auth integration required for live user data.</p>
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                {[
+                  { label: "Total Users", value: "1,247" },
+                  { label: "Active Today", value: "89" },
+                  { label: "New This Week", value: "43" },
+                ].map(s => (
+                  <div key={s.label} className="bg-muted/50 rounded-xl p-3">
+                    <div className="font-display font-bold text-xl">{s.value}</div>
+                    <div className="text-xs text-muted-foreground">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
