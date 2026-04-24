@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig({
-
   base: "/",
 
   plugins: [react()],
@@ -16,9 +15,17 @@ export default defineConfig({
 
   server: {
     port: 5173,
+    strictPort: true,
+    open: true,
+  },
+
+  preview: {
+    port: 4173,
   },
 
   build: {
     outDir: "dist",
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
   },
 });
