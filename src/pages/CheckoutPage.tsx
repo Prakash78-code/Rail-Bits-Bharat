@@ -29,131 +29,163 @@ export default function CheckoutPage() {
     else alert("Invalid coupon code");
   }
 
-
-
   async function handlePlaceOrder() {
-    if (items.length === 0) {
-      alert("Your cart is empty.");
-      return;
-    }
-    
-    // Default vendor if stateData is missing (e.g. page refresh)
-    const currentVendor = stateData?.vendor || { id: "v_fallback", name: "RailBite Kitchen", avgDeliveryTime: 30 };
-    
-    setPlacing(true);
+  if (items.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
 
-    if (!(window as any).Razorpay) {
-      alert("Razorpay SDK failed to load. Please check your connection.");
-      setPlacing(false);
-      return;
-    }
+  const currentVendor =
+    stateData?.vendor || {
+      id: "v_fallback",
+      name: "RailBite Kitchen",
+      avgDeliveryTime: 30,
+    };
 
-    const pnrData = stateData.pnrData ?? { trainName: "Express", trainNumber: "12000", coach: "S1", seat: "24", stations: [] };
-    const tempOrderId = `ord_${Date.now()}`;
+  setPlacing(true);
 
-    try {
-      // 1. Create order on backend
-      const response = await fetch("https://rail-bits-bharat-1.onrender.com/api/create-order", {
+  if (!(window as any).Razorpay) {
+    alert("Razorpay SDK failed to load.");
+    setPlacing(false);
+    return;
+  }
+
+  const pnrData =
+    stateData.pnrData ?? {
+      trainName: "Express",
+      trainNumber: "12000",
+      coach: "S1",
+      seat: "24",
+      stations: [],
+    };
+
+  const tempOrderId = `ord_${Date.now()}`;
+
+  try {
+    // ✅ CREATE ORDER
+    const response = await fetch(
+      "https://rail-bits-bharat-1.onrender.com/api/create-order",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: total,
-        })
-      });
-      const orderData = await response.json();
-
-      if (!orderData.id) {
-        throw new Error(orderData.error || "Server failed to create order");
+        body: JSON.stringify({ amount: total }),
       }
+    );
 
-      // 2. Open Razorpay Checkout Modal
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_demokey", // Use test key from env or placeholder
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "RailBite Bharat",
-        description: `Food order from ${currentVendor.name}`,
-        order_id: orderData.id,
-        handler: async function (response: any) {
-          try {
-            // Verify payment signature via backend
-            const verifyRes = await fetch("https://rail-bits-bharat-1.onrender.com/api/verify-payment", {
+    const orderData = await response.json();
+
+    if (!orderData.id) {
+      throw new Error("Order create failed");
+    }
+
+    // ✅ RAZORPAY OPTIONS
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: "RailBite Bharat",
+      description: `Food order from ${currentVendor.name}`,
+      order_id: orderData.id,
+
+      handler: async function (response: any) {
+        console.log("✅ PAYMENT SUCCESS:", response);
+
+        try {
+          // ✅ VERIFY PAYMENT
+          const verifyRes = await fetch(
+            "https://rail-bits-bharat-1.onrender.com/api/verify-payment",
+            {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-              })
-            });
-            const verifyData = await verifyRes.json();
-            
-            if (verifyData.success) {
-              // Save order to backend
-              await fetch("https://rail-bits-bharat-1.onrender.com/api/save-order", {
+              }),
+            }
+          );
+
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.success) {
+            // ✅ SAVE ORDER
+            await fetch(
+              "https://rail-bits-bharat-1.onrender.com/api/save-order",
+              {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   orderId: tempOrderId,
                   vendorId: currentVendor.id,
                   total: total,
-                  status: "paid"
-                })
-              });
+                  status: "paid",
+                }),
+              }
+            );
 
-              const order = placeOrder(
-                "2847501234",
-                pnrData.trainName,
-                pnrData.trainNumber,
-                stateData?.stationName ?? "",
-                pnrData.coach,
-                pnrData.seat,
-                currentVendor.id,
-                items,
-                paymentMethod
-              );
-              navigate("/order-summary", { state: { order, paymentId: response.razorpay_payment_id } });
-            } else {
-              alert("Payment verification failed: " + verifyData.error);
-              setPlacing(false);
-            }
-          } catch (err) {
-            console.error("Verification error:", err);
-            alert("Payment verification encountered an error.");
+            const order = placeOrder(
+              "2847501234",
+              pnrData.trainName,
+              pnrData.trainNumber,
+              stateData?.stationName ?? "",
+              pnrData.coach,
+              pnrData.seat,
+              currentVendor.id,
+              items,
+              paymentMethod
+            );
+
+            navigate("/order-summary", {
+              state: {
+                order,
+                paymentId: response.razorpay_payment_id,
+              },
+            });
+          } else {
+            alert("Payment verification failed");
             setPlacing(false);
           }
-        },
-        prefill: {
-          name: "Railway Passenger",
-          email: "passenger@example.com",
-          contact: "9999999999"
-        },
-        theme: {
-          color: "#f97316" // Orange accent
-        },
-        modal: {
-          ondismiss: function() {
-            setPlacing(false);
-          }
+        } catch (err) {
+          console.error(err);
+          alert("Verification error");
+          setPlacing(false);
         }
-      };
+      },
 
-      const rzp = new (window as any).Razorpay(options);
-      
-      rzp.on("payment.failed", function (response: any) {
-        alert("Payment Failed: " + response.error.description);
-        setPlacing(false);
-      });
+      modal: {
+        ondismiss: function () {
+          console.log("❌ Modal closed");
+          setPlacing(false);
+        },
+      },
 
-      rzp.open();
+      prefill: {
+        name: "Passenger",
+        email: "test@test.com",
+        contact: "9999999999",
+      },
 
-    } catch (error) {
-      console.error(error);
-      alert("Failed to initiate payment. Ensure backend is running.");
+      theme: {
+        color: "#f97316",
+      },
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+
+    // ✅ PAYMENT FAIL HANDLE
+    rzp.on("payment.failed", function (response: any) {
+      console.log("❌ FAILED:", response);
+      alert("Payment Failed: " + response.error.description);
       setPlacing(false);
-    }
-  }
+    });
 
+    rzp.open();
+  } catch (error) {
+    console.error("❌ ERROR:", error);
+    alert("Server error / backend not working");
+    setPlacing(false);
+  }
+}
   if (items.length === 0) {
     return (
       <div className="min-h-screen pt-24 px-4 flex items-center justify-center">
