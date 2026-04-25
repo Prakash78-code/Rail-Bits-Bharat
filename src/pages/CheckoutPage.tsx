@@ -10,7 +10,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, updateQty, removeItem, getTotal } = useCartStore();
   const { placeOrder } = useApp();
-  const stateData = location.state as { stationName?: string; vendor?: { id: string; name: string; avgDeliveryTime: number }; pnrData?: typeof MOCK_PNRS[string] } | null;
+ const stateData = location.state || {};
 
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
@@ -53,7 +53,7 @@ export default function CheckoutPage() {
 
     try {
       // 1. Create order on backend
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/create-order`, {
+      const response = await fetch("https://rail-bits-bharat-1.onrender.com/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -77,7 +77,7 @@ export default function CheckoutPage() {
         handler: async function (response: any) {
           try {
             // Verify payment signature via backend
-            const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/verify-payment`, {
+            const verifyRes = await fetch("https://rail-bits-bharat-1.onrender.com/api/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -90,7 +90,7 @@ export default function CheckoutPage() {
             
             if (verifyData.success) {
               // Save order to backend
-              await fetch(`${import.meta.env.VITE_API_URL}/api/save-order`, {
+              await fetch("https://rail-bits-bharat-1.onrender.com/api/save-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
